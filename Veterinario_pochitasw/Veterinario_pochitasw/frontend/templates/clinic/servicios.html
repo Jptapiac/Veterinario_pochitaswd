@@ -1,0 +1,68 @@
+{% extends 'clinic/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold">Nuestros Servicios</h1>
+        <p class="lead text-muted">Conoce las tarifas y procedimientos que realizamos.</p>
+    </div>
+
+    <div class="row">
+        <!-- Servicio 1 -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature bg-light rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center"
+                        style="width: 60px; height: 60px;">
+                        <i class="fa-solid fa-user-doctor fa-xl text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Consulta Veterinaria</h5>
+                    <p class="card-text text-muted">Evaluación completa de salud para tu mascota.</p>
+                    <h6 class="text-primary fw-bold">$25.000</h6>
+                </div>
+            </div>
+        </div>
+
+        <!-- Servicio 2 -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature bg-light rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center"
+                        style="width: 60px; height: 60px;">
+                        <i class="fa-solid fa-syringe fa-xl text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Vacunación</h5>
+                    <p class="card-text text-muted">Protege a tu amigo de enfermedades comunes.</p>
+                    <h6 class="text-primary fw-bold">$15.000</h6>
+                </div>
+            </div>
+        </div>
+
+        <!-- Servicio 3 -->
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center p-4">
+                    <div class="feature bg-light rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center"
+                        style="width: 60px; height: 60px;">
+                        <i class="fa-solid fa-bed-pulse fa-xl text-primary"></i>
+                    </div>
+                    <h5 class="card-title">Cirugía General</h5>
+                    <p class="card-text text-muted">Esterilizaciones y procedimientos de tejidos blandos.</p>
+                    <h6 class="text-primary fw-bold">Desde $80.000</h6>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <div class="alert alert-info border-0 shadow" role="alert">
+                <h4 class="alert-heading"><i class="fa-solid fa-phone me-2"></i>Agenda tu hora</h4>
+                <p>Llámanos al +56 9 1234 5678 o regístrate en nuestra web para reservar online.</p>
+                <hr>
+                <p class="mb-0">Horario de atención: Lunes a Viernes 9:00 - 20:00 | Sábados 10:00 - 14:00</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,7 @@
+django>=5.0
+djangorestframework
+drf-spectacular
+psycopg2-binary
+markdown
+django-filter
+django-cors-headers

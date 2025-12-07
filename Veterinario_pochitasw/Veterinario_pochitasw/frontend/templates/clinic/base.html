@@ -1,0 +1,187 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Veterinaria Pochita{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- FontAwesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            /* Soft Blue */
+            --secondary-color: #81C784;
+            /* Mint Green */
+            --accent-color: #FFD54F;
+            /* Warm Yellow */
+            --text-dark: #333333;
+            --bg-light: #F5F5F5;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+        }
+
+        .navbar {
+            background-color: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            color: var(--primary-color) !important;
+            font-size: 1.5rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border: none;
+        }
+
+        .btn-primary:hover {
+            background-color: #357ABD;
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border: none;
+        }
+
+        .footer {
+            background-color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+            border-top: 1px solid #eee;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'index' %}">
+                <i class="fa-solid fa-paw me-2"></i>Pochita S.A.
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center gap-3">
+                    <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'quienes_somos' %}">Quiénes Somos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'servicios' %}">Servicios</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'contacto' %}">Contacto</a></li>
+
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-user-circle me-1"></i>
+                            {% if user.rol == 'VETERINARIO' and user.perfil_veterinario %}
+                            {{ user.perfil_veterinario.nombre }}
+                            {% elif user.rol == 'CLIENTE' and user.perfil_cliente %}
+                            {{ user.perfil_cliente.nombre }} {{ user.perfil_cliente.apellido }}
+                            {% else %}
+                            {{ user.first_name }} {{ user.last_name }}
+                            {% endif %}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                {% if user.rol == 'RECEPCIONISTA' or user.rol == 'ADMIN' %}
+                                <a class="dropdown-item" href="{% url 'dashboard_recepcion' %}">
+                                    <i class="fa-solid fa-gauge me-2"></i>Panel de Recepción
+                                </a>
+                                {% elif user.rol == 'VETERINARIO' %}
+                                <a class="dropdown-item" href="{% url 'dashboard_veterinario' %}">
+                                    <i class="fa-solid fa-gauge me-2"></i>Panel Veterinario
+                                </a>
+                                {% elif user.rol == 'CLIENTE' %}
+                                <a class="dropdown-item" href="{% url 'dashboard_cliente' %}">
+                                    <i class="fa-solid fa-gauge me-2"></i>Mi Panel
+                                </a>
+                                {% endif %}
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <form action="{% url 'logout' %}" method="post">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item text-danger">
+                                        <i class="fa-solid fa-right-from-bracket me-2"></i>Cerrar Sesión
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                    {% else %}
+                    <li class="nav-item ms-2">
+                        <a class="nav-link text-primary fw-bold" href="{% url 'registro' %}">Registrarse</a>
+                    </li>
+                    <li class="nav-item ms-2">
+                        <a class="btn btn-primary px-4 rounded-pill" href="{% url 'login' %}">Ingresar</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Content -->
+    <div class="main-content">
+        <div class="container mt-3">
+            {% if messages %}
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer text-center text-muted">
+        <div class="container">
+            <p class="mb-0">© 2025 Veterinaria Pochita S.A. - Cuidando a tus mejores amigos.</p>
+            <small>Av. Siempre Viva 123, Santiago, Chile | +56 9 1234 5678</small>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Auto-cierre de alertas Django/Bootstrap -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Selecciona todas las alertas que sean dismissible
+            const alerts = document.querySelectorAll('.alert-dismissible');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000); // 5 segundos
+            });
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+
+</html>

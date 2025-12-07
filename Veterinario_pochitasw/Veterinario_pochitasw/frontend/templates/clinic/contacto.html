@@ -1,0 +1,116 @@
+{% extends 'clinic/base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="py-5 bg-dark text-white"
+    style="background-image: url('https://images.unsplash.com/photo-1596272875729-ed2c21ebbbda?ixlib=rb-1.2.1&auto=format&fit=crop&w=1920&q=80'); background-size: cover; background-position: center;">
+    <div class="container py-5 text-center" style="background: rgba(0,0,0,0.6); border-radius: 1rem;">
+        <h1 class="display-4 fw-bold mb-3">Contáctanos</h1>
+        <p class="lead mx-auto" style="max-width: 600px;">
+            Estamos aquí para responder tus dudas y cuidar de tu mascota.
+        </p>
+    </div>
+</section>
+
+<!-- Contact Info & Form -->
+<section class="py-5">
+    <div class="container">
+        <div class="row gx-5">
+            <!-- Contact Info -->
+            <div class="col-lg-5 mb-5 mb-lg-0">
+                <h3 class="fw-bold text-primary mb-4">Información de Contacto</h3>
+
+                <div class="d-flex align-items-start mb-4">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3 text-primary">
+                        <i class="fa-solid fa-location-dot fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold">Dirección</h5>
+                        <p class="text-muted mb-0">Av. Siempreviva 123,<br>Santiago, Chile</p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-start mb-4">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3 text-primary">
+                        <i class="fa-solid fa-phone fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold">Teléfono</h5>
+                        <p class="text-muted mb-0">+56 9 1234 5678</p>
+                        <small class="text-success fw-bold">Disponible 24/7 (Urgencias)</small>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-start mb-4">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3 text-primary">
+                        <i class="fa-solid fa-envelope fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold">Email</h5>
+                        <p class="text-muted mb-0">contacto@pochitasa.cl</p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-start mb-4">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3 text-primary">
+                        <i class="fa-brands fa-instagram fa-lg"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold">Redes Sociales</h5>
+                        <p class="text-muted mb-0">@pochitasa_vet</p>
+                    </div>
+                </div>
+
+                <!-- Map Embed Placeholder -->
+                <div class="rounded-3 overflow-hidden shadow-sm mt-4">
+                    <iframe
+                        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3329.8549747201775!2d-70.6482672!3d-33.4372074!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzPCsDI2JzEzLjkiUyA3MMKwMzgnNTMuOCJX!5e0!3m2!1ses!2scl!4v1633020000000!5m2!1ses!2scl"
+                        width="100%" height="250" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                </div>
+            </div>
+
+            <!-- Contact Form -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow p-4 p-md-5 bg-white">
+                    <h3 class="fw-bold mb-4">Envíanos un mensaje</h3>
+                    <form>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Nombre</label>
+                                <input type="text" class="form-control" placeholder="Tu nombre">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Apellido</label>
+                                <input type="text" class="form-control" placeholder="Tu apellido">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" placeholder="nombre@ejemplo.com">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Asunto</label>
+                            <select class="form-select">
+                                <option>Consulta General</option>
+                                <option>Presupuesto</option>
+                                <option>Reclamo / Sugerencia</option>
+                                <option>Otro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mensaje</label>
+                            <textarea class="form-control" rows="5" placeholder="¿En qué podemos ayudarte?"></textarea>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill">
+                                Enviar Mensaje
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

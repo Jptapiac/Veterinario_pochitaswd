@@ -1,0 +1,245 @@
+{% extends 'clinic/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3 class="mb-0"><i class="fa-solid fa-paw me-2"></i>Únete a Pochita S.A.</h3>
+                    <p class="mb-0 text-white-50">Regístrate tú y tu mascota en un solo paso.</p>
+                </div>
+                <div class="card-body p-5">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <!-- Usuario y Cliente -->
+                        <h4 class="text-primary mb-3">1. Tus Datos Personales</h4>
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre *</label>
+                                {{ user_form.first_name }}
+                                <div class="text-danger small">{{ user_form.first_name.errors }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Apellido *</label>
+                                {{ user_form.last_name }}
+                                <div class="text-danger small">{{ user_form.last_name.errors }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">RUT * <i class="fa-solid fa-circle-info text-info ms-1"
+                                        data-bs-toggle="tooltip"
+                                        title="Formato: 12.345.678-9 (Puntos y guión automáticos)"></i></label>
+                                <input type="text" class="form-control" name="rut" id="rutInput" required
+                                    placeholder="12.345.678-9" maxlength="12"
+                                    value="{{ cliente_form.rut.value|default:'' }}">
+                                <div class="text-danger small">{{ cliente_form.rut.errors }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Teléfono *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">+56</span>
+                                    <input type="number" class="form-control" name="telefono" id="telInput" required
+                                        placeholder="912345678" onkeydown="return event.keyCode !== 69"
+                                        value="{{ cliente_form.telefono.value|default:'' }}">
+                                </div>
+                                <div class="text-danger small">{{ cliente_form.telefono.errors }}</div>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label">Dirección</label>
+                                {{ cliente_form.direccion }}
+                            </div>
+                        </div>
+
+                        <!-- Cuenta -->
+                        <h4 class="text-primary mb-3">2. Datos de Cuenta</h4>
+                        <div class="row mb-4">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Usuario (Login) *</label>
+                                {{ user_form.username }}
+                                <div class="form-text small">{{ user_form.username.help_text }}</div>
+                                <div class="text-danger small">{{ user_form.username.errors }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email *</label>
+                                {{ user_form.email }}
+                                <div class="text-danger small">{{ user_form.email.errors }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Contraseña *</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" name="password" id="password" required>
+                                    <button class="btn btn-outline-secondary" type="button"
+                                        onclick="togglePassword('password')">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="text-danger small">{{ user_form.password.errors }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Confirmar Contraseña *</label>
+                                <div class="input-group">
+                                    <input type="password" class="form-control" name="confirm_password"
+                                        id="confirm_password" required>
+                                    <button class="btn btn-outline-secondary" type="button"
+                                        onclick="togglePassword('confirm_password')">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="text-danger small">{{ user_form.confirm_password.errors }}</div>
+                                <div id="passwordMatchError" class="text-danger small d-none">Las contraseñas no
+                                    coinciden</div>
+                            </div>
+                        </div>
+
+                        <!-- Mascota -->
+                        <h4 class="text-success mb-3"><i class="fa-solid fa-dog me-2"></i>3. Datos de tu Mascota</h4>
+                        <div class="row mb-4 p-3 bg-light rounded">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Nombre Mascota *</label>
+                                {{ mascota_form.nombre }}
+                                <div class="text-danger small">{{ mascota_form.nombre.errors }}</div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Especie *</label>
+                                {{ mascota_form.especie }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Género *</label>
+                                {{ mascota_form.genero }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Raza *</label>
+                                {{ mascota_form.raza }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Fecha Nacimiento (Aprox)</label>
+                                {{ mascota_form.fecha_nacimiento }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Fecha Ingreso Clínica</label>
+                                {{ mascota_form.fecha_registro }}
+                            </div>
+                        </div>
+
+                        {% if user_form.non_field_errors %}
+                        <div class="alert alert-danger">{{ user_form.non_field_errors }}</div>
+                        {% endif %}
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-pill shadow">
+                                <i class="fa-solid fa-check-circle me-2"></i>Registrarme y Crear Cuenta
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center py-3">
+                    <small>¿Ya tienes cuenta? <a href="{% url 'login' %}">Ingresa aquí</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Quick styling for form inputs since we are not using crispy forms fully */
+    input[type='text'],
+    input[type='email'],
+    input[type='password'],
+    input[type='date'],
+    select,
+    textarea {
+        display: block;
+        width: 100%;
+        padding: 0.375rem 0.75rem;
+        font-size: 1rem;
+        font-weight: 400;
+        line-height: 1.5;
+        color: #212529;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+    }
+
+    .input-group input {
+        border-radius: 0.375rem 0 0 0.375rem !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Inicializar tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
+        // Bloquear fechas pasadas en campo Fecha Ingreso Clínica (si existe)
+        const inputRegistro = document.getElementById('id_fecha_registro');
+        if (inputRegistro) {
+            const today = new Date().toISOString().split('T')[0];
+            inputRegistro.min = today;
+        }
+
+        // --- RUT Auto-formato ---
+        const rutInput = document.getElementById('rutInput');
+        if (rutInput) {
+            const formatRut = (rut) => {
+                let value = rut.replace(/[^0-9kK]/g, '');
+                if (value.length <= 1) return value;
+                const dv = value.slice(-1);
+                let cuerpo = value.slice(0, -1);
+                cuerpo = cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+                return `${cuerpo}-${dv}`;
+            };
+            rutInput.addEventListener('input', function () {
+                this.value = formatRut(this.value);
+            });
+        }
+
+        // --- Teléfono Validación ---
+        const telInput = document.getElementById('telInput');
+        if (telInput) {
+            telInput.addEventListener('input', function () {
+                if (this.value.length > 9) {
+                    this.value = this.value.slice(0, 9);
+                }
+            });
+        }
+
+        // --- Validación Contraseña Match ---
+        const pass1 = document.getElementById('password');
+        const pass2 = document.getElementById('confirm_password');
+        const matchError = document.getElementById('passwordMatchError');
+
+        function checkMatch() {
+            if (pass1.value && pass2.value && pass1.value !== pass2.value) {
+                matchError.classList.remove('d-none');
+            } else {
+                matchError.classList.add('d-none');
+            }
+        }
+
+        if (pass1 && pass2) {
+            pass1.addEventListener('input', checkMatch);
+            pass2.addEventListener('input', checkMatch);
+        }
+    });
+
+    function togglePassword(inputId) {
+        const input = document.getElementById(inputId);
+        const icon = input.nextElementSibling.querySelector('i');
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            input.type = "password";
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
+    }
+</script>
+{% endblock %}

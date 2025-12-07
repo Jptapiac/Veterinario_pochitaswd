@@ -1,0 +1,120 @@
+{% extends 'clinic/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h2 class="fw-bold text-success">Panel Veterinario</h2>
+            {% if user.perfil_veterinario %}
+            <p class="text-muted">Bienvenido, {{ user.perfil_veterinario.nombre }}</p>
+            {% else %}
+            <p class="text-muted">Bienvenido, {{ user.first_name }} {{ user.last_name }}</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="card border-0 shadow mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0 card-title"><i class="fa-solid fa-calendar-day me-2 text-primary"></i>Citas Asignadas</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Hora</th>
+                            <th>Paciente</th>
+                            <th>Motivo</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for cita in citas %}
+                        <tr>
+                            <td>
+                                <div class="fw-bold">{{ cita.fecha_hora|date:"H:i" }}</div>
+                                <small class="text-muted">{{ cita.fecha_hora|date:"d/m" }}</small>
+                            </td>
+                            <td>
+                                <div class="fw-bold text-primary">{{ cita.mascota.nombre }}</div>
+                                <div class="small text-muted">{{ cita.mascota.raza }} ({{ cita.mascota.edad_aprox }}
+                                    años)</div>
+                            </td>
+                            <td>{{ cita.motivo }}</td>
+                            <td>
+                                {% if cita.estado == 'CONFIRMADA' %}
+                                <span class="badge bg-success">Confirmada</span>
+                                {% else %}
+                                <span class="badge bg-secondary">{{ cita.estado }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-primary atender-btn" data-cita-id="{{ cita.id }}"
+                                    data-mascota="{{ cita.mascota.nombre }}" data-bs-toggle="modal"
+                                    data-bs-target="#atencionModal">
+                                    <i class="fa-solid fa-stethoscope me-1"></i>Atender
+                                </button>
+                                <a href="{% url 'historial_mascota' cita.mascota.id %}"
+                                    class="btn btn-sm btn-outline-secondary">
+                                    <i class="fa-solid fa-file-medical"></i> Historia
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">No tienes citas pendientes.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Atención -->
+<div class="modal fade" id="atencionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title">Registro de Atención - <span id="modalMascotaNombre"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" id="atencionForm" action="">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Diagnóstico *</label>
+                        <textarea class="form-control" name="diagnostico" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Tratamiento / Indicaciones *</label>
+                        <textarea class="form-control" name="tratamiento" rows="3" required></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Medicamentos</label>
+                            <input type="text" class="form-control" name="medicamentos">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Costo Estimado (CLP)</label>
+                            <input type="number" class="form-control" name="costo_estimado" min="0" value="0">
+                        </div>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="requiere_operacion" id="checkOperacion">
+                        <label class="form-check-label text-danger fw-bold" for="checkOperacion">
+                            Requiere Operación
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Guardar y Finalizar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

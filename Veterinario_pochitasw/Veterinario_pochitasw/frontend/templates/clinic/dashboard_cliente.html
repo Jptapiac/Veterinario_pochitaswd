@@ -1,0 +1,168 @@
+{% extends 'clinic/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-4 mb-4">
+            <!-- Sidebar / Perfil -->
+            <div class="card border-0 shadow-sm text-center p-4 mb-4">
+                <div class="mb-3">
+                    <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white"
+                        style="width: 80px; height: 80px; font-size: 2rem;">
+                        {{ user.first_name|slice:":1" }}
+                    </div>
+                </div>
+                <h4>{{ user.first_name }} {{ user.last_name }}</h4>
+                <p class="text-muted">{{ cliente.rut|default:"Rut no registrado" }}</p>
+                <div class="d-grid mt-2">
+                    <button class="btn btn-outline-primary btn-sm">Editar Datos</button>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm p-3">
+                <h5 class="card-title">Mis Mascotas</h5>
+                <hr>
+                <ul class="list-group list-group-flush">
+                    {% for mascota in mascotas %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-warning rounded-circle me-3 d-flex align-items-center justify-content-center text-white"
+                                style="width: 40px; height: 40px;">
+                                <i
+                                    class="fa-solid {% if mascota.especie == 'Gato' %}fa-cat{% else %}fa-dog{% endif %}"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">{{ mascota.nombre }}</h6>
+                                <small class="text-muted">{{ mascota.raza }}</small>
+                            </div>
+                        </div>
+                        <span class="badge bg-light text-dark">{{ mascota.edad_aprox|default:"?" }} años</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <!-- Próximas Citas -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3>Mis Citas</h3>
+                <button class="btn btn-primary rounded-pill" data-bs-toggle="modal" data-bs-target="#agendarCitaModal">
+                    <i class="fa-solid fa-plus me-2"></i>Agendar Nueva
+                </button>
+            </div>
+
+            {% for cita in citas %}
+            <div class="card mb-3 border-0 shadow-sm hover-shadow transition-all">
+                <div class="card-body p-4">
+                    <div class="row align-items-center">
+                        <div class="col-auto">
+                            <div class="date-box text-center bg-light rounded-3 p-2 border" style="min-width: 80px;">
+                                <h2 class="mb-0 fw-bold text-primary display-6">{{ cita.fecha_hora|date:"d" }}</h2>
+
+                            </div>
+                        </div>
+                        <div class="col border-start ps-4">
+                            <div class="d-flex align-items-center mb-1">
+                                <h5 class="fw-bold mb-0 text-dark">{{ cita.tipo|title }}</h5>
+                                <span class="mx-2 text-muted">•</span>
+                                <span class="text-primary fw-medium">{{ cita.mascota.nombre }}</span>
+                            </div>
+
+                            <div class="d-flex flex-wrap gap-3 text-muted">
+                                <div class="d-flex align-items-center">
+                                    <i class="fa-regular fa-clock me-2 text-primary"></i>
+                                    <span>{{ cita.fecha_hora|date:"H:i" }} hrs</span>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <i class="fa-solid fa-user-doctor me-2 text-success"></i>
+                                    <span>Dr. {{ cita.veterinario.nombre|default:"Por asignar" }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-auto text-end">
+                            <span
+                                class="badge rounded-pill px-3 py-2 {% if cita.estado == 'CONFIRMADA' %}bg-success-subtle text-success{% elif cita.estado == 'AGENDADA' %}bg-primary-subtle text-primary{% elif cita.estado == 'REALIZADA' %}bg-secondary-subtle text-secondary{% else %}bg-warning-subtle text-warning-emphasis{% endif %} mb-2 d-block">
+                                {{ cita.estado|title }}
+                            </span>
+                            <button class="btn btn-outline-danger btn-sm rounded-pill w-100" {% if cita.estado == 'CANCELADA' %}disabled{% endif %} onclick="document.getElementById('cancel-form-{{ cita.id }}').submit();">
+                                <i class="fa-solid fa-ban me-1"></i> Cancelar
+                            </button>
+                            <form id="cancel-form-{{ cita.id }}" method="post" action="" style="display: none;">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="cancelar">
+                                <input type="hidden" name="cita_id" value="{{ cita.id }}">
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-light text-center">No tienes citas próximas agendadas.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal Agendar Cita -->
+<div class="modal fade" id="agendarCitaModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Agendar Nueva Cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="post" action="" id="citaForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Mascota</label>
+                        <select class="form-select" name="mascota" required>
+                            <option value="">Seleccionar...</option>
+                            {% for m in mascotas %}
+                            <option value="{{ m.id }}">{{ m.nombre }} ({{ m.raza }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Veterinario (Opcional)</label>
+                        <select class="form-select" name="veterinario">
+                            <option value="">Cualquiera</option>
+                            {% for vet in veterinarios %}
+                            <option value="{{ vet.id }}">{{ vet.nombre }} - {{ vet.especialidad }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Fecha y Hora Preferida</label>
+                        <input type="datetime-local" class="form-control" name="fecha_hora" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Motivo</label>
+                        <textarea class="form-control" name="motivo" rows="2" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" form="citaForm" class="btn btn-primary">Solicitar Cita</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Bloquear fechas pasadas en inputs datetime-local
+            const inputsFecha = document.querySelectorAll('input[type="datetime-local"]');
+            if (inputsFecha.length > 0) {
+                const now = new Date();
+                // Formato ISO local para input datetime-local (YYYY-MM-DDTHH:MM)
+                const nowStr = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+
+                inputsFecha.forEach(input => {
+                    input.min = nowStr;
+                });
+            }
+        });
+    </script>
+    {% endblock %}

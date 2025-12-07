@@ -1,0 +1,39 @@
+{% extends 'clinic/base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow">
+                <div class="card-body p-5">
+                    <h3 class="card-title text-center mb-4">Iniciar Sesión</h3>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label">Usuario / RUT</label>
+                            <input type="text" name="username" class="form-control" id="id_username" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="id_password" class="form-label">Contraseña</label>
+                            <input type="password" name="password" class="form-control" id="id_password" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary rounded-pill">Ingresar</button>
+                        </div>
+
+                        {% if form.errors %}
+                        <div class="alert alert-danger mt-3 py-2">
+                            <small>Usuario o contraseña incorrectos.</small>
+                        </div>
+                        {% endif %}
+                    </form>
+                    <div class="text-center mt-3">
+                        <small class="text-muted">¿No tienes cuenta? <a href="{% url 'registro' %}">Regístrate aquí
+                                junto a tu mascota</a>.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

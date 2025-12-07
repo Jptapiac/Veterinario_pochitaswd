@@ -1,0 +1,218 @@
+{% extends 'clinic/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Custom Homepage Styles */
+    .hero-section {
+        background: linear-gradient(135deg, #E8F5FC 0%, #D4E9F7 100%);
+        padding: 5rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-circle {
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: rgba(74, 144, 226, 0.1);
+        border-radius: 50%;
+        top: -50px;
+        right: -50px;
+        z-index: 0;
+    }
+
+    .feature-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 1rem;
+        background: white;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+
+    .icon-box {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stats-box {
+        background: white;
+        padding: 1rem;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        display: inline-block;
+        margin-right: 1rem;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-circle"></div>
+    <div class="container position-relative" style="z-index: 1;">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <div class="badge bg-primary bg-opacity-10 text-primary mb-3 px-3 py-2 rounded-pill fw-bold">
+                    <i class="fa-solid fa-star me-2"></i>Veterinaria #1 en la Región
+                </div>
+                <h1 class="display-4 fw-bold mb-4 text-dark">
+                    Cuidamos a tu mejor amigo <br>
+                    <span class="text-primary">con el amor que merece</span>
+                </h1>
+                <p class="lead text-muted mb-5">
+                    Profesionales expertos, tecnología de punta y atención 24/7.
+                    Porque sabemos que es parte de tu familia.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    {% if user.is_authenticated %}
+                    {% if user.rol == 'CLIENTE' %}
+                    <a href="{% url 'dashboard_cliente' %}"
+                        class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm hover-scale">
+                        <i class="fa-solid fa-paw me-2"></i>Ver Mis Mascotas
+                    </a>
+                    {% elif user.rol == 'RECEPCIONISTA' or user.rol == 'ADMIN' %}
+                    <a href="{% url 'dashboard_recepcion' %}"
+                        class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm hover-scale">
+                        <i class="fa-solid fa-desktop me-2"></i>Ir a Recepción
+                    </a>
+                    {% elif user.rol == 'VETERINARIO' %}
+                    <a href="{% url 'dashboard_veterinario' %}"
+                        class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm hover-scale">
+                        <i class="fa-solid fa-user-doctor me-2"></i>Ir a Consultas
+                    </a>
+                    {% endif %}
+                    {% else %}
+                    <a href="{% url 'registro' %}" class="btn btn-primary btn-lg rounded-pill px-4 shadow-sm">
+                        <i class="fa-solid fa-calendar-check me-2"></i>Agendar Cita
+                    </a>
+                    <a href="#servicios" class="btn btn-outline-dark btn-lg rounded-pill px-4">
+                        Conocer Servicios
+                    </a>
+                    {% endif %}
+                </div>
+
+                <div class="mt-5 pt-4 border-top">
+                    <div class="row">
+                        <div class="col-auto">
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="fa-solid fa-check-circle text-success me-2"></i>
+                                <span>Atención 24/7</span>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <div class="d-flex align-items-center text-muted">
+                                <i class="fa-solid fa-check-circle text-success me-2"></i>
+                                <span>Especialistas Certificados</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center position-relative">
+                <img src="https://images.unsplash.com/photo-1548767797-d8c844163c4c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
+                    class="img-fluid rounded-4 shadow-lg position-relative"
+                    style="transform: rotate(2deg); border: 8px solid white;" alt="Perro Feliz">
+
+                <!-- Floating Card -->
+                <div class="position-absolute bg-white p-3 rounded-3 shadow start-0 bottom-0 mb-4 ms-4 d-none d-md-block"
+                    style="max-width: 200px; text-align: left;">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="bg-success rounded-circle p-1 me-2 text-white d-flex justify-content-center align-items-center"
+                            style="width: 24px; height: 24px;">
+                            <i class="fa-solid fa-check" style="font-size: 12px;"></i>
+                        </div>
+                        <small class="fw-bold">Cliente Feliz</small>
+                    </div>
+                    <p class="mb-0 small text-muted">"Excelente atención con mi peludito."</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Services Section -->
+<section id="servicios" class="py-5 bg-white">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <span class="text-primary fw-bold text-uppercase tracking-wider">Nuestros Servicios</span>
+            <h2 class="fw-bold mt-2 display-6">Todo lo que necesitas</h2>
+        </div>
+
+        <div class="row g-4">
+            <!-- Service 1 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card h-100 p-4 shadow-sm">
+                    <div class="icon-box bg-primary bg-opacity-10 text-primary">
+                        <i class="fa-solid fa-stethoscope"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Consultas Generales</h5>
+                    <p class="text-muted mb-0">Chequeos preventivos y diagnóstico integral para el bienestar de tu
+                        mascota.</p>
+                </div>
+            </div>
+
+            <!-- Service 2 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card h-100 p-4 shadow-sm">
+                    <div class="icon-box bg-success bg-opacity-10 text-success">
+                        <i class="fa-solid fa-heart-pulse"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Urgencias 24/7</h5>
+                    <p class="text-muted mb-0">Equipo disponible día y noche para atender cualquier emergencia.</p>
+                </div>
+            </div>
+
+            <!-- Service 3 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card h-100 p-4 shadow-sm">
+                    <div class="icon-box bg-info bg-opacity-10 text-info">
+                        <i class="fa-solid fa-scissors"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Cirugía y Pabellón</h5>
+                    <p class="text-muted mb-0">Infraestructura moderna para procedimientos quirúrgicos seguros.</p>
+                </div>
+            </div>
+
+            <!-- Service 4 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-card h-100 p-4 shadow-sm">
+                    <div class="icon-box bg-warning bg-opacity-10 text-warning">
+                        <i class="fa-solid fa-flask"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Laboratorio Clínico</h5>
+                    <p class="text-muted mb-0">Exámenes de sangre y análisis rápidos en el mismo lugar.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="py-5 bg-primary text-white">
+    <div class="container text-center py-4">
+        <h2 class="fw-bold mb-3">¿Listo para visitarnos?</h2>
+        <p class="lead mb-4 text-white-50">Agenda tu hora online en menos de 2 minutos.</p>
+        {% if not user.is_authenticated %}
+        <a href="{% url 'registro_rapido' %}"
+            class="btn btn-light btn-lg rounded-pill px-5 text-primary fw-bold shadow">
+            Registrarme Ahora
+        </a>
+        {% else %}
+        <a href="#" class="btn btn-light btn-lg rounded-pill px-5 text-primary fw-bold shadow">
+            Ver disponibilidad
+        </a>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}

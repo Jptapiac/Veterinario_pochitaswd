@@ -1,0 +1,76 @@
+{% extends 'clinic/base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-3">
+        <div class="col">
+            <a href="{% url 'dashboard_veterinario' %}" class="btn btn-outline-secondary mb-3"><i
+                    class="fa-solid fa-arrow-left me-2"></i>Volver al Panel</a>
+            <h2 class="fw-bold text-primary">Historial Médico: {{ mascota.nombre }}</h2>
+            <div class="badge bg-info text-dark">{{ mascota.especie }}</div>
+            <div class="badge bg-light text-dark border">{{ mascota.raza }}</div>
+            <div class="text-muted mt-2">Dueño: {{ mascota.cliente.nombre }} {{ mascota.cliente.apellido }} ({{
+                mascota.cliente.telefono }})</div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <h4 class="mb-3"><i class="fa-solid fa-file-medical me-2"></i>Atenciones Realizadas</h4>
+            {% for atencion in atenciones %}
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="card-header bg-white pb-0 border-0">
+                    <div class="d-flex justify-content-between">
+                        <h5 class="fw-bold text-success">{{ atencion.fecha|date:"d/m/Y - H:i" }}</h5>
+                        <span class="badge bg-success">Realizada</span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Diagnóstico:</strong>
+                            <p>{{ atencion.diagnostico }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Tratamiento:</strong>
+                            <p>{{ atencion.tratamiento }}</p>
+                        </div>
+                    </div>
+                    {% if atencion.medicamentos %}
+                    <div class="alert alert-secondary py-2 mt-2">
+                        <i class="fa-solid fa-pills me-2"></i> <strong>Receta:</strong> {{ atencion.medicamentos }}
+                    </div>
+                    {% endif %}
+                    {% if atencion.requiere_operacion %}
+                    <div class="alert alert-danger py-2 mt-2">
+                        <i class="fa-solid fa-user-doctor me-2"></i> <strong>Requiere Operación</strong>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">No hay atenciones médicas registradas para esta mascota.</div>
+            {% endfor %}
+        </div>
+        <div class="col-md-4">
+            <h5 class="mb-3">Historial de Citas</h5>
+            <ul class="list-group">
+                {% for cita in citas %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <small class="d-block fw-bold">{{ cita.fecha_hora|date:"d/m/Y H:i" }}</small>
+                        <small class="text-muted">{{ cita.motivo }}</small>
+                    </div>
+                    <span
+                        class="badge {% if cita.estado == 'REALIZADA' %}bg-success{% elif cita.estado == 'CANCELADA' %}bg-danger{% else %}bg-primary{% endif %} rounded-pill">
+                        {{ cita.estado }}
+                    </span>
+                </li>
+                {% empty %}
+                <li class="list-group-item">Sin historial.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
