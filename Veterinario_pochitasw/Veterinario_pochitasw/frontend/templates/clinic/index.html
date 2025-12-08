@@ -5,7 +5,7 @@
 <style>
     /* Custom Homepage Styles */
     .hero-section {
-        background: linear-gradient(135deg, #E8F5FC 0%, #D4E9F7 100%);
+        background: linear-gradient(135deg, #E8F7FD 0%, #D0EFFA 100%);
         padding: 5rem 0;
         position: relative;
         overflow: hidden;
@@ -13,12 +13,23 @@
 
     .hero-circle {
         position: absolute;
+        width: 400px;
+        height: 400px;
+        background: rgba(135, 206, 235, 0.15);
+        border-radius: 50%;
+        top: -100px;
+        right: -100px;
+        z-index: 0;
+    }
+
+    .hero-circle-2 {
+        position: absolute;
         width: 300px;
         height: 300px;
-        background: rgba(74, 144, 226, 0.1);
+        background: rgba(152, 255, 152, 0.1);
         border-radius: 50%;
-        top: -50px;
-        right: -50px;
+        bottom: -50px;
+        left: -50px;
         z-index: 0;
     }
 
@@ -27,49 +38,65 @@
         border: none;
         border-radius: 1rem;
         background: white;
+        border: 2px solid transparent;
     }
 
     .feature-card:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+        box-shadow: 0 10px 25px rgba(135, 206, 235, 0.2) !important;
+        border-color: #87CEEB;
     }
 
     .icon-box {
-        width: 60px;
-        height: 60px;
+        width: 70px;
+        height: 70px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 12px;
-        font-size: 1.5rem;
+        border-radius: 15px;
+        font-size: 1.8rem;
         margin-bottom: 1.5rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .stats-box {
         background: white;
         padding: 1rem;
         border-radius: 1rem;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 4px 6px rgba(135, 206, 235, 0.15);
         display: inline-block;
         margin-right: 1rem;
         margin-bottom: 1rem;
+    }
+
+    .hero-image {
+        border-radius: 20px;
+        box-shadow: 0 15px 40px rgba(135, 206, 235, 0.3);
+        border: 5px solid white;
+    }
+
+    .badge-custom {
+        background: linear-gradient(135deg, #87CEEB 0%, #98FF98 100%);
+        color: white;
+        font-weight: 600;
     }
 </style>
 
 <!-- Hero Section -->
 <section class="hero-section">
     <div class="hero-circle"></div>
+    <div class="hero-circle-2"></div>
     <div class="container position-relative" style="z-index: 1;">
         <div class="row align-items-center">
             <div class="col-lg-6 mb-5 mb-lg-0">
-                <div class="badge bg-primary bg-opacity-10 text-primary mb-3 px-3 py-2 rounded-pill fw-bold">
+                <div class="badge badge-custom mb-3 px-3 py-2 rounded-pill">
                     <i class="fa-solid fa-star me-2"></i>Veterinaria #1 en la Región
                 </div>
                 <h1 class="display-4 fw-bold mb-4 text-dark">
                     Cuidamos a tu mejor amigo <br>
-                    <span class="text-primary">con el amor que merece</span>
+                    <span style="color: #87CEEB;">con el amor que merece</span>
                 </h1>
-                <p class="lead text-muted mb-5">
+                <p class="lead mb-5" style="color: #6B7280;">
                     Profesionales expertos, tecnología de punta y atención 24/7.
                     Porque sabemos que es parte de tu familia.
                 </p>
@@ -101,17 +128,17 @@
                     {% endif %}
                 </div>
 
-                <div class="mt-5 pt-4 border-top">
+                <div class="mt-5 pt-4 border-top" style="border-color: #E0F2FE !important;">
                     <div class="row">
                         <div class="col-auto">
-                            <div class="d-flex align-items-center text-muted">
-                                <i class="fa-solid fa-check-circle text-success me-2"></i>
+                            <div class="d-flex align-items-center" style="color: #6B7280;">
+                                <i class="fa-solid fa-check-circle me-2" style="color: #98FF98;"></i>
                                 <span>Atención 24/7</span>
                             </div>
                         </div>
                         <div class="col-auto">
-                            <div class="d-flex align-items-center text-muted">
-                                <i class="fa-solid fa-check-circle text-success me-2"></i>
+                            <div class="d-flex align-items-center" style="color: #6B7280;">
+                                <i class="fa-solid fa-check-circle me-2" style="color: #98FF98;"></i>
                                 <span>Especialistas Certificados</span>
                             </div>
                         </div>
@@ -119,17 +146,16 @@
                 </div>
             </div>
             <div class="col-lg-6 text-center position-relative">
-                <img src="https://images.unsplash.com/photo-1548767797-d8c844163c4c?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"
-                    class="img-fluid rounded-4 shadow-lg position-relative"
-                    style="transform: rotate(2deg); border: 8px solid white;" alt="Perro Feliz">
+                <img src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                    class="img-fluid hero-image" alt="Perro y Gato Felices">
 
                 <!-- Floating Card -->
                 <div class="position-absolute bg-white p-3 rounded-3 shadow start-0 bottom-0 mb-4 ms-4 d-none d-md-block"
-                    style="max-width: 200px; text-align: left;">
+                    style="max-width: 220px; text-align: left; border-left: 4px solid #FFD700;">
                     <div class="d-flex align-items-center mb-2">
-                        <div class="bg-success rounded-circle p-1 me-2 text-white d-flex justify-content-center align-items-center"
-                            style="width: 24px; height: 24px;">
-                            <i class="fa-solid fa-check" style="font-size: 12px;"></i>
+                        <div class="rounded-circle p-1 me-2 text-white d-flex justify-content-center align-items-center"
+                            style="width: 28px; height: 28px; background-color: #98FF98;">
+                            <i class="fa-solid fa-check" style="font-size: 14px; color: white;"></i>
                         </div>
                         <small class="fw-bold">Cliente Feliz</small>
                     </div>
@@ -144,7 +170,8 @@
 <section id="servicios" class="py-5 bg-white">
     <div class="container py-5">
         <div class="text-center mb-5">
-            <span class="text-primary fw-bold text-uppercase tracking-wider">Nuestros Servicios</span>
+            <span style="color: #87CEEB; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Nuestros
+                Servicios</span>
             <h2 class="fw-bold mt-2 display-6">Todo lo que necesitas</h2>
         </div>
 
@@ -152,7 +179,8 @@
             <!-- Service 1 -->
             <div class="col-md-6 col-lg-3">
                 <div class="feature-card h-100 p-4 shadow-sm">
-                    <div class="icon-box bg-primary bg-opacity-10 text-primary">
+                    <div class="icon-box"
+                        style="background: linear-gradient(135deg, #87CEEB 0%, #A8DCED 100%); color: white;">
                         <i class="fa-solid fa-stethoscope"></i>
                     </div>
                     <h5 class="fw-bold mb-3">Consultas Generales</h5>
@@ -164,7 +192,8 @@
             <!-- Service 2 -->
             <div class="col-md-6 col-lg-3">
                 <div class="feature-card h-100 p-4 shadow-sm">
-                    <div class="icon-box bg-success bg-opacity-10 text-success">
+                    <div class="icon-box"
+                        style="background: linear-gradient(135deg, #98FF98 0%, #B8FFB8 100%); color: white;">
                         <i class="fa-solid fa-heart-pulse"></i>
                     </div>
                     <h5 class="fw-bold mb-3">Urgencias 24/7</h5>
@@ -175,7 +204,8 @@
             <!-- Service 3 -->
             <div class="col-md-6 col-lg-3">
                 <div class="feature-card h-100 p-4 shadow-sm">
-                    <div class="icon-box bg-info bg-opacity-10 text-info">
+                    <div class="icon-box"
+                        style="background: linear-gradient(135deg, #87CEEB 0%, #6BB6E8 100%); color: white;">
                         <i class="fa-solid fa-scissors"></i>
                     </div>
                     <h5 class="fw-bold mb-3">Cirugía y Pabellón</h5>
@@ -186,7 +216,8 @@
             <!-- Service 4 -->
             <div class="col-md-6 col-lg-3">
                 <div class="feature-card h-100 p-4 shadow-sm">
-                    <div class="icon-box bg-warning bg-opacity-10 text-warning">
+                    <div class="icon-box"
+                        style="background: linear-gradient(135deg, #FFD700 0%, #FFE44D 100%); color: white;">
                         <i class="fa-solid fa-flask"></i>
                     </div>
                     <h5 class="fw-bold mb-3">Laboratorio Clínico</h5>
@@ -198,17 +229,17 @@
 </section>
 
 <!-- Call to Action -->
-<section class="py-5 bg-primary text-white">
+<section class="py-5" style="background: linear-gradient(135deg, #87CEEB 0%, #6BB6E8 100%);">
     <div class="container text-center py-4">
-        <h2 class="fw-bold mb-3">¿Listo para visitarnos?</h2>
-        <p class="lead mb-4 text-white-50">Agenda tu hora online en menos de 2 minutos.</p>
+        <h2 class="fw-bold mb-3 text-white">¿Listo para visitarnos?</h2>
+        <p class="lead mb-4" style="color: rgba(255, 255, 255, 0.9);">Agenda tu hora online en menos de 2 minutos.</p>
         {% if not user.is_authenticated %}
-        <a href="{% url 'registro_rapido' %}"
-            class="btn btn-light btn-lg rounded-pill px-5 text-primary fw-bold shadow">
+        <a href="{% url 'registro_rapido' %}" class="btn btn-light btn-lg rounded-pill px-5 fw-bold shadow"
+            style="color: #87CEEB;">
             Registrarme Ahora
         </a>
         {% else %}
-        <a href="#" class="btn btn-light btn-lg rounded-pill px-5 text-primary fw-bold shadow">
+        <a href="#" class="btn btn-light btn-lg rounded-pill px-5 fw-bold shadow" style="color: #87CEEB;">
             Ver disponibilidad
         </a>
         {% endif %}

@@ -2,12 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
+from django.contrib.auth.decorators import login_required
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
 from django_ratelimit.decorators import ratelimit
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view
 from django.db.models import Q
 from .models import Usuario, Cliente, Veterinario, Mascota, Cita, Atencion, ListaEspera, Producto
 from .serializers import (
@@ -1088,3 +1089,89 @@ def cancelar_cita_veterinario(request, cita_id):
     
     return redirect('dashboard_veterinario')
 
+
+@api_view(['POST'])
+@login_required
+def guardar_atencion(request, cita_id):
+    try:
+        cita = Cita.objects.get(id=cita_id)
+        
+        # Validar que sea el veterinario asignado o admin (opcional)
+        # if cita.veterinario and cita.veterinario.usuario != request.user: ...
+
+        data = request.data
+        
+        # Crear Atención
+        atencion = Atencion.objects.create(
+            cita=cita,
+            diagnostico=data.get('diagnostico'),
+            tratamiento=data.get('tratamiento'),
+            medicamentos=data.get('medicamentos', ''),
+            costo_estimado=data.get('costo_estimado', 0) or 0,
+            requiere_operacion=data.get('requiere_operacion', False) == 'on' or data.get('requiere_operacion') is True
+        )
+        
+        # Actualizar estado de la cita
+        cita.estado = Cita.Estado.REALIZADA
+        cita.save()
+        
+        return Response({'message': 'Atención guardada correctamente', 'atencion_id': atencion.id}, status=201)
+    except Cita.DoesNotExist:
+        return Response({'error': 'Cita no encontrada'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+@api_view(['POST'])
+@login_required
+def registrar_atencion_walkin(request, lista_id):
+    try:
+        item = ListaEspera.objects.get(id=lista_id)
+        data = request.data
+        
+        # 1. Crear Cita
+        cita = Cita.objects.create(
+            mascota=item.mascota,
+            veterinario=item.veterinario_asignado,  # Asumimos que ya está asignado
+            fecha_hora=timezone.now(),
+            tipo=Cita.Tipo.URGENCIA if item.prioridad == 'URGENTE' else Cita.Tipo.CONSULTA,
+            motivo=item.motivo,
+            estado=Cita.Estado.REALIZADA,
+            es_urgencia=(item.prioridad == 'URGENTE')
+        )
+        
+        # 2. Crear Atención
+        atencion = Atencion.objects.create(
+            cita=cita,
+            diagnostico=data.get('diagnostico'),
+            tratamiento=data.get('tratamiento'),
+            medicamentos=data.get('medicamentos', ''),
+            costo_estimado=data.get('costo_estimado', 0) or 0,
+            requiere_operacion=data.get('requiere_operacion', False) == 'on' or data.get('requiere_operacion') is True
+        )
+        
+        # 3. Actualizar Lista de Espera
+        item.estado = ListaEspera.Estado.ATENDIDO
+        item.fecha_atencion = timezone.now()
+        item.save()
+        
+        return Response({'message': 'Atención registrada', 'cita_id': cita.id}, status=201)
+
+    except ListaEspera.DoesNotExist:
+        return Response({'error': 'Turno no encontrado'}, status=404)
+    except Exception as e:
+        return Response({'error': str(e)}, status=500)
+
+@login_required
+def historial_mascota(request, mascota_id):
+    mascota = get_object_or_404(Mascota, id=mascota_id)
+    # Verificar permisos: dueño o personal
+    if request.user.rol == 'CLIENTE' and mascota.cliente.usuario != request.user:
+        messages.error(request, "No tienes permiso para ver esta mascota.")
+        return redirect('dashboard_cliente')
+        
+    atenciones = Atencion.objects.filter(cita__mascota=mascota).select_related('cita', 'cita__veterinario').order_by('-fecha')
+    
+    return render(request, 'clinic/historial_mascota.html', {
+        'mascota': mascota,
+        'atenciones': atenciones
+    })

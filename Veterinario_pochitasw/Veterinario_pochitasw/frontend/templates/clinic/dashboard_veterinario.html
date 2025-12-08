@@ -207,6 +207,64 @@
     const vetId = {% if user.perfil_veterinario %}{ { user.perfil_veterinario.id } } {% else %} null{% endif %};
     const csrftoken = '{{ csrf_token }}';
 
+    // Manejo del Modal de Atención
+    const atencionModal = document.getElementById('atencionModal');
+    let currentCitaId = null;
+
+    if (atencionModal) {
+        atencionModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            currentCitaId = button.getAttribute('data-cita-id');
+            const mascotaNombre = button.getAttribute('data-mascota');
+
+            const modalTitle = document.getElementById('modalMascotaNombre');
+            if (modalTitle) modalTitle.textContent = mascotaNombre;
+
+            const form = document.getElementById('atencionForm');
+            if (form) form.reset();
+        });
+    }
+
+    // Submit del formulario de atención
+    const formAtencion = document.getElementById('atencionForm');
+    if (formAtencion) {
+        formAtencion.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            if (!currentCitaId) return;
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            // Checkbox handling
+            const checkOp = document.getElementById('checkOperacion');
+            data.requiere_operacion = checkOp ? checkOp.checked : false;
+
+            fetch(`/api/citas/${currentCitaId}/guardar_atencion/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify(data)
+            })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Atención guardada exitosamente');
+                        window.location.reload();
+                    } else {
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Error al guardar');
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message);
+                });
+        });
+    }
+
+    // Walk-in functions
     function atenderPaciente(id) {
         if (!confirm('¿Atender a este paciente?')) return;
 
@@ -229,24 +287,70 @@
             .catch(error => console.error('Error:', error));
     }
 
+    // AHORA: Finalizar atención de Walk-in abre el modal
     function finalizarAtencion(id) {
-        if (!confirm('¿Finalizar atención de este paciente?')) return;
+        // En lugar de confirmación simple, abrimos el modal
+        // Necesitamos simular el click para abrir el modal, o hacerlo manualmente
 
-        fetch(`/api/lista-espera/${id}/marcar_atendido/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrftoken
+        // 1. Setear variables globales para el modal
+        currentCitaId = null; // No es cita normal
+        // Usaremos una nueva variable para Walkin ID
+        window.currentWalkinId = id;
+
+        // 2. Limpiar form
+        document.getElementById('atencionForm').reset();
+        document.getElementById('modalMascotaNombre').textContent = "Paciente Walk-in";
+
+        // 3. Abrir modal
+        const modal = new bootstrap.Modal(document.getElementById('atencionModal'));
+        modal.show();
+    }
+
+    // UPDATE: Listener del form para manejar ambos casos
+    const formAtencion = document.getElementById('atencionForm');
+    if (formAtencion) {
+        formAtencion.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            const checkOp = document.getElementById('checkOperacion');
+            data.requiere_operacion = checkOp ? checkOp.checked : false;
+
+            let url = '';
+
+            // Determinar si es Cita o Walk-in
+            if (currentCitaId) {
+                url = `/api/citas/${currentCitaId}/guardar_atencion/`;
+            } else if (window.currentWalkinId) {
+                url = `/api/lista-espera/${window.currentWalkinId}/registrar_atencion/`;
+            } else {
+                return;
             }
-        })
-            .then(response => {
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    alert('Error al finalizar atención');
-                }
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify(data)
             })
-            .catch(error => console.error('Error:', error));
+                .then(response => {
+                    if (response.ok) {
+                        alert('Atención guardada y Cita creada exitosamente');
+                        window.location.reload();
+                    } else {
+                        return response.json().then(err => {
+                            throw new Error(err.error || 'Error al guardar');
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(error.message);
+                });
+        });
     }
 </script>
 {% endblock %}

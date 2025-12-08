@@ -14,7 +14,9 @@ from .views import (
     # HU002 y HU006
     api_disponibilidad_horarios, api_antecedentes_mascota, cancelar_cita_veterinario,
     # Cliente
-    agregar_mascota_cliente
+    agregar_mascota_cliente,
+    # API Views
+    guardar_atencion, registrar_atencion_walkin
 )
 
 router = DefaultRouter()
@@ -60,6 +62,10 @@ urlpatterns = [
     path('dashboard/veterinario/atender/<int:cita_id>/', registrar_atencion, name='registrar_atencion'),
     # HU006: Cancelar cita por veterinario
     path('dashboard/veterinario/cancelar_cita/<int:cita_id>/', cancelar_cita_veterinario, name='cancelar_cita_veterinario'),
+    # Guardar Atención
+    path('api/citas/<int:cita_id>/guardar_atencion/', guardar_atencion, name='guardar_atencion'),
+    # Walk-in Atención
+    path('api/lista-espera/<int:lista_id>/registrar_atencion/', registrar_atencion_walkin, name='registrar_atencion_walkin'),
     path('quienes-somos/', quienes_somos, name='quienes_somos'),
     path('contacto/', contacto, name='contacto'),
 ]

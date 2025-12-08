@@ -18,52 +18,95 @@
 
     <style>
         :root {
-            --primary-color: #4A90E2;
-            /* Soft Blue */
-            --secondary-color: #81C784;
-            /* Mint Green */
-            --accent-color: #FFD54F;
-            /* Warm Yellow */
-            --text-dark: #333333;
-            --bg-light: #F5F5F5;
+            /* Manos de Dios Sanadoras Color Palette */
+            --white-pure: #FFFFFF;
+            --sky-blue: #87CEEB;
+            --mint-green: #98FF98;
+            --soft-gold: #FFD700;
+            --warm-gray: #A9A9A9;
+
+            /* Semantic Colors */
+            --primary-color: #87CEEB;
+            --secondary-color: #98FF98;
+            --accent-color: #FFD700;
+            --text-dark: #4A4A4A;
+            --text-muted: #A9A9A9;
+            --bg-light: #F8FCFF;
+            --border-light: #E0F2FE;
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
         }
 
         body {
             font-family: 'Outfit', sans-serif;
             background-color: var(--bg-light);
             color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
         }
 
         .navbar {
-            background-color: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            background-color: var(--white-pure);
+            box-shadow: 0 2px 15px rgba(135, 206, 235, 0.15);
+            border-bottom: 2px solid var(--border-light);
         }
 
         .navbar-brand {
             font-weight: 700;
             color: var(--primary-color) !important;
             font-size: 1.5rem;
+            text-shadow: 0 1px 2px rgba(135, 206, 235, 0.2);
+        }
+
+        .nav-link {
+            color: var(--text-dark) !important;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color) !important;
         }
 
         .btn-primary {
-            background-color: var(--primary-color);
+            background: linear-gradient(135deg, var(--primary-color) 0%, #6BB6E8 100%);
             border: none;
+            box-shadow: 0 4px 12px rgba(135, 206, 235, 0.3);
+            transition: all 0.3s ease;
         }
 
         .btn-primary:hover {
-            background-color: #357ABD;
+            background: linear-gradient(135deg, #6BB6E8 0%, var(--primary-color) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(135, 206, 235, 0.4);
         }
 
         .btn-secondary {
             background-color: var(--secondary-color);
             border: none;
+            color: var(--text-dark);
+            box-shadow: 0 4px 12px rgba(152, 255, 152, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background-color: #7FE67F;
+            color: var(--text-dark);
+        }
+
+        .main-content {
+            flex: 1 0 auto;
         }
 
         .footer {
-            background-color: white;
+            background: linear-gradient(180deg, var(--white-pure) 0%, #F0F9FF 100%);
             padding: 2rem 0;
-            margin-top: 3rem;
-            border-top: 1px solid #eee;
+            margin-top: auto;
+            border-top: 3px solid var(--accent-color);
+            flex-shrink: 0;
         }
     </style>
     {% block extra_css %}{% endblock %}
@@ -82,10 +125,12 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center gap-3">
+                    {% if not user.is_authenticated %}
                     <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">Inicio</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'quienes_somos' %}">Quiénes Somos</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'servicios' %}">Servicios</a></li>
                     <li class="nav-item"><a class="nav-link" href="{% url 'contacto' %}">Contacto</a></li>
+                    {% endif %}
 
                     {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
