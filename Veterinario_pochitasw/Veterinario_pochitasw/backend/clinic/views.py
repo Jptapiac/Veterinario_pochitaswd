@@ -563,6 +563,52 @@ def editar_mascota(request, mascota_id):
     return redirect('dashboard_cliente')
 
 
+def agregar_mascota_cliente(request):
+    """
+    Vista para que un cliente agregue una nueva mascota desde su dashboard.
+    """
+    if not request.user.is_authenticated or request.user.rol != 'CLIENTE':
+        return redirect('index')
+    
+    if request.method == 'POST':
+        try:
+            cliente = request.user.perfil_cliente
+            
+            # Obtener datos del formulario
+            nombre = request.POST.get('nombre', '').strip()
+            especie = request.POST.get('especie', 'Perro')
+            raza = request.POST.get('raza', '').strip()
+            genero = request.POST.get('genero', 'Macho')
+            fecha_nacimiento = request.POST.get('fecha_nacimiento')
+            fecha_registro = request.POST.get('fecha_registro')
+            observaciones = request.POST.get('observaciones', '').strip()
+            
+            # Validar campos obligatorios
+            if not nombre or not raza:
+                messages.error(request, "Nombre y raza son obligatorios.")
+                return redirect('dashboard_cliente')
+            
+            # Crear mascota
+            from django.utils import timezone
+            mascota = Mascota.objects.create(
+                cliente=cliente,
+                nombre=nombre,
+                especie=especie,
+                raza=raza,
+                genero=genero,
+                fecha_nacimiento=fecha_nacimiento if fecha_nacimiento else None,
+                fecha_registro=fecha_registro if fecha_registro else timezone.now().date(),
+                observaciones=observaciones
+            )
+            
+            messages.success(request, f"Mascota {mascota.nombre} registrada exitosamente.")
+            
+        except Exception as e:
+            messages.error(request, f"Error al registrar mascota: {e}")
+    
+    return redirect('dashboard_cliente')
+
+
 def dashboard_cliente(request):
     import logging
     logger = logging.getLogger(__name__)
@@ -756,3 +802,166 @@ class ListaEsperaViewSet(viewsets.ModelViewSet):
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()
     serializer_class = ProductoSerializer
+
+
+# --- HU002: API para disponibilidad de horarios ---
+def api_disponibilidad_horarios(request):
+    """
+    API para obtener bloques horarios disponibles para una fecha y veterinario.
+    
+    Parámetros GET:
+        - fecha: Fecha en formato YYYY-MM-DD (requerido)
+        - veterinario_id: ID del veterinario (opcional)
+    
+    Retorna:
+        JSON con lista de bloques horarios de 30 minutos (9:00-20:00)
+        Cada bloque indica si está disponible u ocupado
+    """
+    if not request.user.is_authenticated or request.user.rol not in ['RECEPCIONISTA', 'ADMIN']:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    from datetime import datetime, timedelta
+    
+    fecha_str = request.GET.get('fecha')
+    veterinario_id = request.GET.get('veterinario_id')
+    
+    if not fecha_str:
+        return JsonResponse({'error': 'Fecha requerida'}, status=400)
+    
+    try:
+        fecha = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+    except ValueError:
+        return JsonResponse({'error': 'Formato de fecha inválido. Use YYYY-MM-DD'}, status=400)
+    
+    # Generar bloques de 30 minutos de 9:00 a 20:00
+    bloques = []
+    hora_inicio = 9
+    hora_fin = 20
+    
+    for hora in range(hora_inicio, hora_fin):
+        for minuto in [0, 30]:
+            inicio = datetime.combine(fecha, datetime.min.time().replace(hour=hora, minute=minuto))
+            fin = inicio + timedelta(minutes=30)
+            
+            # Verificar si hay cita en este bloque
+            citas_query = Cita.objects.filter(
+                fecha_hora__gte=inicio,
+                fecha_hora__lt=fin,
+                estado__in=['AGENDADA', 'CONFIRMADA']
+            )
+            
+            if veterinario_id:
+                citas_query = citas_query.filter(veterinario_id=veterinario_id)
+            
+            ocupado = citas_query.exists()
+            
+            bloques.append({
+                'hora': inicio.strftime('%H:%M'),
+                'datetime': inicio.isoformat(),
+                'disponible': not ocupado
+            })
+    
+    return JsonResponse({'bloques': bloques})
+
+
+# --- HU006: API para antecedentes de mascota ---
+def api_antecedentes_mascota(request, mascota_id):
+    """
+    API para obtener antecedentes de una mascota.
+    
+    Retorna:
+        JSON con información básica, historial de citas y última atención
+    """
+    if not request.user.is_authenticated or request.user.rol not in ['RECEPCIONISTA', 'ADMIN']:
+        return JsonResponse({'error': 'Unauthorized'}, status=403)
+    
+    try:
+        mascota = Mascota.objects.get(id=mascota_id)
+        
+        # Información básica
+        info_basica = {
+            'nombre': mascota.nombre,
+            'especie': mascota.especie,
+            'raza': mascota.raza,
+            'genero': mascota.genero,
+            'edad': mascota.edad_aprox,
+            'observaciones': mascota.observaciones
+        }
+        
+        # Últimas 5 citas
+        citas = Cita.objects.filter(mascota=mascota).order_by('-fecha_hora')[:5]
+        historial_citas = [{
+            'fecha': c.fecha_hora.strftime('%d/%m/%Y %H:%M'),
+            'tipo': c.get_tipo_display(),
+            'estado': c.get_estado_display(),
+            'veterinario': c.veterinario.nombre if c.veterinario else 'Sin asignar',
+            'motivo': c.motivo
+        } for c in citas]
+        
+        # Última atención médica
+        ultima_atencion = None
+        try:
+            atencion = Atencion.objects.filter(cita__mascota=mascota).order_by('-fecha').first()
+            if atencion:
+                ultima_atencion = {
+                    'fecha': atencion.fecha.strftime('%d/%m/%Y'),
+                    'diagnostico': atencion.diagnostico,
+                    'tratamiento': atencion.tratamiento,
+                    'medicamentos': atencion.medicamentos,
+                    'requiere_operacion': atencion.requiere_operacion
+                }
+        except:
+            pass
+        
+        return JsonResponse({
+            'info_basica': info_basica,
+            'historial_citas': historial_citas,
+            'ultima_atencion': ultima_atencion
+        })
+        
+    except Mascota.DoesNotExist:
+        return JsonResponse({'error': 'Mascota no encontrada'}, status=404)
+
+
+# --- HU006: Cancelación de cita por veterinario ---
+def cancelar_cita_veterinario(request, cita_id):
+    """
+    Vista para que un veterinario cancele una cita con motivo.
+    Registra quién canceló y el motivo.
+    """
+    if not request.user.is_authenticated or request.user.rol != 'VETERINARIO':
+        return redirect('index')
+    
+    if request.method == 'POST':
+        try:
+            from django.utils import timezone
+            
+            cita = Cita.objects.get(id=cita_id)
+            
+            # Verificar que el veterinario sea el asignado
+            if cita.veterinario != request.user.perfil_veterinario:
+                messages.error(request, "No tienes permiso para cancelar esta cita.")
+                return redirect('dashboard_veterinario')
+            
+            motivo = request.POST.get('motivo_cancelacion', '').strip()
+            
+            if not motivo:
+                messages.error(request, "Debe proporcionar un motivo de cancelación.")
+                return redirect('dashboard_veterinario')
+            
+            # Actualizar cita
+            cita.estado = 'CANCELADA'
+            cita.cancelado_por = 'VETERINARIO'
+            cita.motivo_cancelacion = motivo
+            cita.fecha_cancelacion = timezone.now()
+            cita.save()
+            
+            messages.success(request, f"Cita cancelada. Se notificará al cliente: {cita.mascota.cliente.nombre}")
+            
+        except Cita.DoesNotExist:
+            messages.error(request, "Cita no encontrada.")
+        except Exception as e:
+            messages.error(request, f"Error al cancelar cita: {e}")
+    
+    return redirect('dashboard_veterinario')
+

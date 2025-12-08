@@ -96,6 +96,11 @@ class Cita(models.Model):
         VACUNA = 'VACUNA', _('Vacunación')
         CIRUGIA = 'CIRUGIA', _('Cirugía')
         URGENCIA = 'URGENCIA', _('Urgencia')
+    
+    class CanceladoPor(models.TextChoices):
+        CLIENTE = 'CLIENTE', _('Cliente')
+        VETERINARIO = 'VETERINARIO', _('Veterinario')
+        SISTEMA = 'SISTEMA', _('Sistema')
 
     veterinario = models.ForeignKey(Veterinario, on_delete=models.SET_NULL, null=True, related_name='citas')
     mascota = models.ForeignKey(Mascota, on_delete=models.CASCADE, related_name='citas')
@@ -104,6 +109,11 @@ class Cita(models.Model):
     motivo = models.TextField(blank=True)
     estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.AGENDADA)
     es_urgencia = models.BooleanField(default=False, verbose_name=_("Es Urgencia"))
+    
+    # Campos para HU006 - Proceso de cancelación
+    cancelado_por = models.CharField(max_length=20, choices=CanceladoPor.choices, null=True, blank=True)
+    motivo_cancelacion = models.TextField(blank=True)
+    fecha_cancelacion = models.DateTimeField(null=True, blank=True)
     
     # Campo helper para saber si ya se procesó en atención
     
