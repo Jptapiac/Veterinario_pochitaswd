@@ -288,7 +288,7 @@ def dashboard_recepcion(request):
     vets = Veterinario.objects.all()
     clientes = Cliente.objects.all()
     mascotas = Mascota.objects.all() # Needed for appointment creation dropdown
-    espera = ListaEspera.objects.filter(estado='PENDIENTE')
+    espera = ListaEspera.objects.filter(estado='ESPERANDO')
     
     return render(request, 'clinic/dashboard_recepcion.html', {
         'citas': citas, 
@@ -492,6 +492,9 @@ def reagendar_cita(request, cita_id):
             if motivo_reagendamiento:
                 cita.motivo_reagendamiento = motivo_reagendamiento
                 cita.fecha_reagendamiento = timezone.now()
+            
+            # Cambiar estado a REAGENDADA
+            cita.estado = 'REAGENDADA'
             
             cita.save()
             messages.success(request, f"Cita para {cita.mascota.nombre} reagendada correctamente.")
@@ -1175,3 +1178,89 @@ def historial_mascota(request, mascota_id):
         'mascota': mascota,
         'atenciones': atenciones
     })
+
+
+# ===== API ENDPOINTS FOR PET MANAGEMENT =====
+
+@api_view(['GET'])
+def api_mascotas_cliente(request, cliente_id):
+    """
+    API endpoint to fetch all pets for a specific client.
+    
+    Returns JSON list of pets with their details.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'No autenticado'}, status=401)
+    
+    # Only receptionist, admin, or the client themselves can view
+    if request.user.rol not in ['RECEPCIONISTA', 'ADMIN', 'VETERINARIO']:
+        if request.user.rol != 'CLIENTE' or request.user.cliente.id != cliente_id:
+            return JsonResponse({'error': 'No autorizado'}, status=403)
+    
+    try:
+        cliente = Cliente.objects.get(id=cliente_id)
+        mascotas = Mascota.objects.filter(cliente=cliente)
+        
+        pets_data = []
+        for mascota in mascotas:
+            pets_data.append({
+                'id': mascota.id,
+                'nombre': mascota.nombre,
+                'especie': mascota.especie,
+                'raza': mascota.raza or '',
+                'genero': mascota.genero or '',
+                'fecha_nacimiento': mascota.fecha_nacimiento.strftime('%Y-%m-%d') if mascota.fecha_nacimiento else ''
+            })
+        
+        return JsonResponse(pets_data, safe=False)
+    
+    except Cliente.DoesNotExist:
+        return JsonResponse({'error': 'Cliente no encontrado'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@api_view(['POST'])
+def api_editar_mascota(request, mascota_id):
+    """
+    API endpoint to update pet information.
+    
+    Accepts JSON with pet fields to update.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'No autenticado'}, status=401)
+    
+    # Only receptionist and admin can edit pets
+    if request.user.rol not in ['RECEPCIONISTA', 'ADMIN']:
+        return JsonResponse({'error': 'No autorizado'}, status=403)
+    
+    try:
+        mascota = Mascota.objects.get(id=mascota_id)
+        
+        # Get data from DRF request
+        data = request.data
+        
+        # Update fields
+        if 'nombre' in data:
+            mascota.nombre = data['nombre']
+        if 'especie' in data:
+            mascota.especie = data['especie']
+        if 'raza' in data:
+            mascota.raza = data['raza']
+        if 'genero' in data:
+            mascota.genero = data['genero']
+        if 'fecha_nacimiento' in data and data['fecha_nacimiento']:
+            from datetime import datetime
+            mascota.fecha_nacimiento = datetime.strptime(data['fecha_nacimiento'], '%Y-%m-%d').date()
+        
+        mascota.save()
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Mascota actualizada correctamente'
+        })
+    
+    except Mascota.DoesNotExist:
+        return JsonResponse({'error': 'Mascota no encontrada'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

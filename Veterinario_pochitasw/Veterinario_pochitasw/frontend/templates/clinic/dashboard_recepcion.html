@@ -3,378 +3,408 @@
 
 {% block content %}
 <style>
-    /* Simple CSS Grid Calendar */
-    .calendar-container {
-        display: none;
-        /* Hidden by default, toggled via JS */
+    /* Dashboard Layout */
+    .dashboard-container {
+        display: flex;
+        gap: 1.5rem;
+        min-height: calc(100vh - 200px);
     }
 
-    .calendar-header {
-        display: grid;
-        grid-template-columns: 60px repeat(6, 1fr);
+    .sidebar {
+        width: 300px;
+        flex-shrink: 0;
+    }
+
+    .main-content-area {
+        flex: 1;
+        min-width: 0;
+    }
+
+    /* Quick Actions Card */
+    .quick-actions-card {
+        background: linear-gradient(135deg, #87CEEB 0%, #A8DCED 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        color: white;
+        box-shadow: 0 4px 15px rgba(135, 206, 235, 0.3);
+        margin-bottom: 1.5rem;
+    }
+
+    .quick-actions-card h5 {
+        font-weight: 700;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+
+    .quick-action-btn {
+        width: 100%;
+        margin-bottom: 0.75rem;
+        background: white;
+        color: #87CEEB;
+        border: none;
+        padding: 0.75rem;
+        border-radius: 10px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .quick-action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         background: #f8f9fa;
-        border-bottom: 1px solid #dee2e6;
-        font-weight: bold;
-        text-align: center;
-        padding: 10px 0;
     }
 
-    .calendar-body {
+    .quick-action-btn i {
+        margin-right: 0.5rem;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
         display: grid;
-        grid-template-columns: 60px repeat(6, 1fr);
-        grid-template-rows: repeat(11, 60px);
-        /* 9:00 to 20:00 = 11 hours */
-        overflow-y: auto;
-        max-height: 600px;
-        position: relative;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
     }
 
-    .time-slot {
-        border-bottom: 1px solid #e9ecef;
-        border-right: 1px solid #e9ecef;
-        text-align: center;
-        font-size: 0.8rem;
-        color: #6c757d;
-        padding-top: 5px;
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 2px 10px rgba(135, 206, 235, 0.15);
+        border-left: 4px solid #87CEEB;
     }
 
-    .day-column {
-        border-right: 1px solid #e9ecef;
-        position: relative;
+    .stat-card.success {
+        border-left-color: #98FF98;
     }
 
-    .calendar-event {
-        position: absolute;
-        left: 2px;
-        right: 2px;
-        padding: 4px;
-        font-size: 0.75rem;
-        border-radius: 4px;
+    .stat-card.warning {
+        border-left-color: #FFD700;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #87CEEB;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #6B7280;
+        margin-top: 0.5rem;
+    }
+
+    /* Compact Table */
+    .compact-table {
+        font-size: 0.9rem;
+    }
+
+    .compact-table th {
+        background-color: #F0F9FF;
+        color: #4A4A4A;
+        font-weight: 600;
+        padding: 0.75rem 0.5rem;
+        border-bottom: 2px solid #87CEEB;
+    }
+
+    .compact-table td {
+        padding: 0.75rem 0.5rem;
+        vertical-align: middle;
+    }
+
+    .compact-table tbody tr:hover {
+        background-color: #F8FCFF;
+    }
+
+    /* Badge Improvements */
+    .badge-custom {
+        padding: 0.35em 0.65em;
+        font-weight: 600;
+        border-radius: 6px;
+    }
+
+    .badge-agendada {
+        background-color: #87CEEB;
         color: white;
-        cursor: pointer;
-        overflow: hidden;
-        z-index: 10;
-        transition: transform 0.2s;
     }
 
-    .calendar-event:hover {
-        transform: scale(1.02);
-        z-index: 20;
+    .badge-confirmada {
+        background-color: #98FF98;
+        color: #2D5016;
     }
 
-    /* Month Calendar Grid */
-    .calendar-month-grid {
-        display: grid;
-        grid-template-columns: repeat(7, 1fr);
-        gap: 1px;
-        background-color: #dee2e6;
-        border: 1px solid #dee2e6;
-    }
-
-    .calendar-day-header {
-        background-color: #f8f9fa;
-        padding: 12px;
-        text-align: center;
-        font-weight: 600;
-        color: #495057;
-        border-bottom: 2px solid #dee2e6;
-    }
-
-    .calendar-day-cell {
-        background-color: white;
-        min-height: 100px;
-        padding: 8px;
-        position: relative;
-        cursor: pointer;
-        transition: background-color 0.2s;
-    }
-
-    .calendar-day-cell:hover {
-        background-color: #f8f9fa;
-    }
-
-    .calendar-day-cell.other-month {
-        background-color: #f8f9fa;
-        opacity: 0.5;
-    }
-
-    .calendar-day-cell.today {
-        background-color: #e7f3ff;
-        border: 2px solid #0d6efd;
-    }
-
-    .calendar-day-cell.weekend {
-        background-color: #fff8f0;
-    }
-
-    .calendar-day-cell.holiday {
-        background-color: #ffe6e6;
-    }
-
-    .day-number {
-        display: block;
-        font-weight: 600;
-        font-size: 14px;
-        margin-bottom: 4px;
-        color: #212529;
-    }
-
-    .holiday-name {
-        font-size: 10px;
-        color: #dc3545;
-        font-weight: 600;
-        display: block;
-        margin-top: 2px;
-    }
-
-    .appointment-block {
-        font-size: 11px;
-        padding: 2px 4px;
-        margin: 2px 0;
-        border-radius: 3px;
-        background-color: #0d6efd;
+    .badge-realizada {
+        background-color: #A9A9A9;
         color: white;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
 
-    .more-appointments {
-        font-size: 10px;
-        color: #6c757d;
-        font-weight: 600;
-        margin-top: 4px;
+    .badge-cancelada {
+        background-color: #FFE4E1;
+        color: #DC3545;
+    }
+
+    .badge-reagendada {
+        background-color: #FFD700;
+        /* Dorado Suave */
+        color: #8B6914;
+    }
+
+    /* Action Buttons */
+    .btn-action {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.875rem;
+        border-radius: 6px;
+        margin: 0 0.25rem;
+    }
+
+    /* Tab Styling */
+    .nav-tabs .nav-link {
+        color: #6B7280;
+        border: none;
+        border-bottom: 3px solid transparent;
+        font-weight: 500;
+    }
+
+    .nav-tabs .nav-link.active {
+        color: #87CEEB;
+        border-bottom-color: #87CEEB;
+        background: none;
+    }
+
+    .nav-tabs .nav-link:hover {
+        color: #87CEEB;
+        border-bottom-color: #A8DCED;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+        .dashboard-container {
+            flex-direction: column;
+        }
+
+        .sidebar {
+            width: 100%;
+        }
+
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
 </style>
-<div class="container py-4">
+
+<div class="container-fluid py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="fw-bold text-primary">Panel de Recepción</h2>
-        <div class="d-flex gap-2">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registroRapidoModal">
-                <i class="fa-solid fa-user-plus me-2"></i>Nuevo Cliente
-            </button>
-            <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#nuevaCitaModal">
-                <i class="fa-solid fa-plus me-2"></i>Nueva Cita
-            </button>
-        </div>
+        <h2 class="fw-bold" style="color: #87CEEB;">Panel de Recepción</h2>
     </div>
 
-    <ul class="nav nav-tabs mb-4" id="recepTab" role="tablist">
-        <li class="nav-item">
-            <button class="nav-link active" id="agenda-tab" data-bs-toggle="tab" data-bs-target="#agenda"
-                type="button">Agenda</button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" id="espera-tab" data-bs-toggle="tab" data-bs-target="#espera" type="button">Lista
-                de Espera</button>
-        </li>
-        <li class="nav-item">
-            <button class="nav-link" id="clientes-tab" data-bs-toggle="tab" data-bs-target="#clientes"
-                type="button">Clientes</button>
-        </li>
-    </ul>
+    <div class="dashboard-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Quick Actions -->
+            <div class="quick-actions-card">
+                <h5><i class="fa-solid fa-bolt me-2"></i>Acciones Rápidas</h5>
+                <button class="quick-action-btn" data-bs-toggle="modal" data-bs-target="#registroRapidoModal">
+                    <i class="fa-solid fa-user-plus"></i>Nuevo Cliente
+                </button>
+                <button class="quick-action-btn" data-bs-toggle="modal" data-bs-target="#nuevaCitaModal">
+                    <i class="fa-solid fa-calendar-plus"></i>Nueva Cita
+                </button>
+                <button class="quick-action-btn" data-bs-toggle="modal" data-bs-target="#registrarWalkinModal">
+                    <i class="fa-solid fa-person-walking"></i>Registrar Walk-in
+                </button>
+            </div>
 
-    <div class="tab-content" id="recepTabContent">
-        <!-- Agenda -->
-        <div class="tab-pane fade show active" id="agenda" role="tabpanel">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-end mb-3">
-                        <div class="btn-group" role="group">
-                            <button type="button" class="btn btn-outline-primary active" id="btn-view-list"
-                                onclick="switchView('list')"><i class="fa-solid fa-list me-2"></i>Lista</button>
-                            <button type="button" class="btn btn-outline-primary" id="btn-view-week"
-                                onclick="switchView('week')"><i
-                                    class="fa-solid fa-calendar-week me-2"></i>Semana</button>
-                            <button type="button" class="btn btn-outline-primary" id="btn-view-month"
-                                onclick="switchView('month')"><i class="fa-solid fa-calendar-days me-2"></i>Mes</button>
-                        </div>
-                    </div>
-
-                    <!-- Calendar View -->
-                    <div id="calendar-view" class="calendar-container mb-4">
-                        <div class="calendar-header">
-                            <div>Hora</div>
-                            <div>Lun</div>
-                            <div>Mar</div>
-                            <div>Mié</div>
-                            <div>Jue</div>
-                            <div>Vie</div>
-                            <div>Sáb</div>
-                        </div>
-                        <div class="calendar-body" id="calendar-grid">
-                            <!-- Time Slots generated by JS or loop -->
-                            {% for i in "0123456789"|make_list %} <!-- Hacky loop 0-10 -->
-                            <!-- We will populate this via JS for better control -->
-                            {% endfor %}
-                        </div>
-                    </div>
-
-                    <!-- List View (Table) -->
-                    <div id="list-view" class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Hora</th>
-                                    <th>Paciente</th>
-                                    <th>Dueño</th>
-                                    <th>Veterinario</th>
-                                    <th>Motivo</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for cita in citas %}
-                                <tr>
-                                    <td>{{ cita.fecha_hora|date:"d/m/Y H:i" }}</td>
-                                    <td><span class="fw-bold">{{ cita.mascota.nombre }}</span> <small
-                                            class="text-muted">({{ cita.mascota.especie }})</small></td>
-                                    <td>{{ cita.mascota.cliente.nombre }} {{ cita.mascota.cliente.apellido }}</td>
-                                    <td>{{ cita.veterinario.nombre }}</td>
-                                    <td>{{ cita.motivo }}</td>
-                                    <td>
-                                        {% if cita.estado == 'CONFIRMADA' %}
-                                        <span class="badge bg-success">Confirmada</span>
-                                        {% elif cita.estado == 'AGENDADA' %}
-                                        <span class="badge bg-primary">Agendada</span>
-                                        {% elif cita.estado == 'REALIZADA' %}
-                                        <span class="badge bg-secondary">Realizada</span>
-                                        {% else %}
-                                        <span class="badge bg-warning text-dark">{{ cita.estado }}</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <!-- Botón Reagendar/Editar -->
-                                        {% if cita.estado != 'CANCELADA' and cita.estado != 'REALIZADA' %}
-                                        <button class="btn btn-sm btn-outline-primary" onclick="openRescheduleModal({
-                                                id: {{ cita.id }},
-                                                start: '{{ cita.fecha_hora|date:'Y-m-d\TH:i' }}',
-                                                veterinario_id: {{ cita.veterinario.id|default:'null' }},
-                                                mascota: '{{ cita.mascota.nombre }}'
-                                            })" title="Reagendar cita">
-                                            <i class="fa-solid fa-pen"></i>
-                                        </button>
-                                        {% else %}
-                                        <button class="btn btn-sm btn-outline-secondary" disabled
-                                            title="No se puede editar">
-                                            <i class="fa-solid fa-pen"></i>
-                                        </button>
-                                        {% endif %}
-
-                                        <!-- Botón Cancelar -->
-                                        {% if cita.estado != 'CANCELADA' and cita.estado != 'REALIZADA' %}
-                                        <button class="btn btn-sm btn-outline-danger"
-                                            onclick="confirmDeleteCita({{ cita.id }})" title="Cancelar cita">
-                                            <i class="fa-solid fa-xmark"></i>
-                                        </button>
-                                        {% endif %}
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="7" class="text-center py-4">No hay citas registradas.</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <!-- Month View -->
-                    <div id="month-view" style="display: none;">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <button class="btn btn-outline-secondary" onclick="navigateMonth(-1)">
-                                <i class="fa-solid fa-chevron-left"></i> Anterior
-                            </button>
-                            <h4 id="current-month-title">Diciembre 2025</h4>
-                            <button class="btn btn-outline-secondary" onclick="navigateMonth(1)">
-                                Siguiente <i class="fa-solid fa-chevron-right"></i>
-                            </button>
-                        </div>
-                        <div class="calendar-month-grid">
-                            <div class="calendar-day-header">Dom</div>
-                            <div class="calendar-day-header">Lun</div>
-                            <div class="calendar-day-header">Mar</div>
-                            <div class="calendar-day-header">Mié</div>
-                            <div class="calendar-day-header">Jue</div>
-                            <div class="calendar-day-header">Vie</div>
-                            <div class="calendar-day-header">Sáb</div>
-                            <!-- Day cells will be added by JavaScript -->
-                        </div>
-                    </div>
-
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ citas|length }}</div>
+                    <div class="stat-label">Citas Hoy</div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-value" style="color: #98FF98;">{{ lista_espera|length }}</div>
+                    <div class="stat-label">En Espera</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-value" style="color: #FFD700;">{{ clientes|length }}</div>
+                    <div class="stat-label">Clientes Totales</div>
                 </div>
             </div>
         </div>
 
-        <!-- Lista Espera (Walk-in Queue) -->
-        <div class="tab-pane fade" id="espera" role="tabpanel">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0">Cola de Atención Walk-in</h5>
-                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registrarWalkinModal">
-                            <i class="fa-solid fa-user-plus me-2"></i>Registrar Walk-in
-                        </button>
-                    </div>
+        <!-- Main Content -->
+        <div class="main-content-area">
+            <ul class="nav nav-tabs mb-4" id="recepTab" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active" id="agenda-tab" data-bs-toggle="tab" data-bs-target="#agenda"
+                        type="button">
+                        <i class="fa-solid fa-calendar-days me-2"></i>Agenda
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="espera-tab" data-bs-toggle="tab" data-bs-target="#espera"
+                        type="button">
+                        <i class="fa-solid fa-clock me-2"></i>Lista de Espera
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link" id="clientes-tab" data-bs-toggle="tab" data-bs-target="#clientes"
+                        type="button">
+                        <i class="fa-solid fa-users me-2"></i>Clientes
+                    </button>
+                </li>
+            </ul>
 
-                    <div class="table-responsive">
-                        <table class="table table-hover" id="tabla-walkin">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>#</th>
-                                    <th>Cliente</th>
-                                    <th>Mascota</th>
-                                    <th>Motivo</th>
-                                    <th>Prioridad</th>
-                                    <th>Tiempo Espera</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody id="walkin-tbody">
-                                <tr>
-                                    <td colspan="8" class="text-center py-4">
-                                        <i class="fa-solid fa-spinner fa-spin me-2"></i>Cargando cola...
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+            <div class="tab-content" id="recepTabContent">
+                <!-- Agenda Tab -->
+                <div class="tab-pane fade show active" id="agenda" role="tabpanel">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table compact-table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Hora</th>
+                                            <th>Paciente</th>
+                                            <th>Dueño</th>
+                                            <th>Veterinario</th>
+                                            <th>Motivo</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for cita in citas %}
+                                        <tr>
+                                            <td>
+                                                <div class="fw-bold">{{ cita.fecha_hora|date:"H:i" }}</div>
+                                                <small class="text-muted">{{ cita.fecha_hora|date:"d/m" }}</small>
+                                            </td>
+                                            <td>
+                                                <span class="fw-bold">{{ cita.mascota.nombre }}</span>
+                                                <small class="text-muted d-block">{{ cita.mascota.especie }}</small>
+                                            </td>
+                                            <td>{{ cita.mascota.cliente.nombre }} {{ cita.mascota.cliente.apellido }}
+                                            </td>
+                                            <td>{{ cita.veterinario.nombre }}</td>
+                                            <td>{{ cita.motivo|truncatewords:3 }}</td>
+                                            <td>
+                                                {% if cita.estado == 'CONFIRMADA' %}
+                                                <span class="badge badge-custom badge-confirmada">Confirmada</span>
+                                                {% elif cita.estado == 'AGENDADA' %}
+                                                <span class="badge badge-custom badge-agendada">Agendada</span>
+                                                {% elif cita.estado == 'REAGENDADA' %}
+                                                <span class="badge badge-custom badge-reagendada">Reagendada</span>
+                                                {% elif cita.estado == 'REALIZADA' %}
+                                                <span class="badge badge-custom badge-realizada">Realizada</span>
+                                                {% elif cita.estado == 'CANCELADA' %}
+                                                <span class="badge badge-custom badge-cancelada">Cancelada</span>
+                                                {% else %}
+                                                <span class="badge badge-custom badge-cancelada">{{ cita.estado
+                                                    }}</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if cita.estado != 'CANCELADA' and cita.estado != 'REALIZADA' %}
+                                                <button class="btn btn-sm btn-outline-primary btn-action" onclick="openRescheduleModal({
+                                                        id: {{ cita.id }},
+                                                        start: '{{ cita.fecha_hora|date:'Y-m-d\TH:i' }}',
+                                                        veterinario_id: {{ cita.veterinario.id|default:'null' }},
+                                                        mascota: '{{ cita.mascota.nombre }}'
+                                                    })" title="Reagendar">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-danger btn-action"
+                                                    onclick="confirmDeleteCita({{ cita.id }})" title="Cancelar">
+                                                    <i class="fa-solid fa-xmark"></i>
+                                                </button>
+                                                {% else %}
+                                                <span class="text-muted small">-</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        {% empty %}
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4 text-muted">
+                                                <i class="fa-regular fa-calendar-xmark fa-2x mb-2 d-block"></i>
+                                                No hay citas registradas
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Clientes -->
-        <div class="tab-pane fade" id="clientes" role="tabpanel">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <input type="text" id="buscador-clientes" class="form-control mb-3"
-                        placeholder="Buscar cliente por RUT o Nombre..." onkeyup="filtrarClientes()">
-                    <table class="table" id="tabla-clientes">
-                        <thead>
-                            <tr>
-                                <th>RUT</th>
-                                <th>Nombre</th>
-                                <th>Teléfono</th>
-                                <th>Mascotas</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for cliente in clientes %}
-                            <tr>
-                                <td>{{ cliente.rut }}</td>
-                                <td>{{ cliente.nombre }} {{ cliente.apellido }}</td>
-                                <td>{{ cliente.telefono }}</td>
-                                <td>
-                                    {% for m in cliente.mascotas.all %}
-                                    <span class="badge bg-info text-dark">{{ m.nombre }}</span>
-                                    {% endfor %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                <!-- Lista Espera Tab -->
+                <div class="tab-pane fade" id="espera" role="tabpanel">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table compact-table table-hover" id="tabla-walkin">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Cliente</th>
+                                            <th>Mascota</th>
+                                            <th>Motivo</th>
+                                            <th>Prioridad</th>
+                                            <th>Tiempo Espera</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="walkin-tbody">
+                                        <tr>
+                                            <td colspan="8" class="text-center py-4">
+                                                <i class="fa-solid fa-spinner fa-spin me-2"></i>Cargando cola...
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clientes Tab -->
+                <div class="tab-pane fade" id="clientes" role="tabpanel">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <input type="text" id="buscador-clientes" class="form-control mb-3"
+                                placeholder="Buscar cliente por RUT o Nombre..." onkeyup="filtrarClientes()">
+                            <div class="table-responsive">
+                                <table class="table compact-table" id="tabla-clientes">
+                                    <thead>
+                                        <tr>
+                                            <th>RUT</th>
+                                            <th>Nombre</th>
+                                            <th>Teléfono</th>
+                                            <th>Mascotas</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for cliente in clientes %}
+                                        <tr>
+                                            <td>{{ cliente.rut }}</td>
+                                            <td>{{ cliente.nombre }} {{ cliente.apellido }}</td>
+                                            <td>{{ cliente.telefono }}</td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline-primary"
+                                                    onclick="openPetsModal({{ cliente.id }}, '{{ cliente.nombre }} {{ cliente.apellido }}')"
+                                                    title="Ver y editar mascotas"><i class="fa-solid fa-paw"></i> Ver
+                                                    Mascotas</button>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1132,6 +1162,51 @@
     </div>
 </div>
 
+<!-- Modal Ver Mascotas -->
+<div class="modal fade" id="verMascotasModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fa-solid fa-paw"></i> Mascotas de <span
+                        id="clienteNombreModal"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Notification area for success/error messages -->
+                <div id="petModalNotification" class="alert alert-dismissible fade" role="alert" style="display:none;">
+                    <span id="petModalNotificationText"></span>
+                    <button type="button" class="btn-close"
+                        onclick="document.getElementById('petModalNotification').style.display='none'"></button>
+                </div>
+
+                <div id="mascotasTableContainer" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-hover table-sm">
+                        <thead class="sticky-top bg-white">
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Especie</th>
+                                <th>Raza</th>
+                                <th>Género</th>
+                                <th>Fecha Nac.</th>
+                                <th style="min-width: 120px;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mascotasTableBody">
+                            <!-- Pets will be loaded here dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="noMascotasMessage" class="alert alert-info" style="display:none;">
+                    <i class="fa-solid fa-info-circle"></i> Este cliente no tiene mascotas registradas.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Walk-in Queue JavaScript -->
 <script>
     // CSRF Token global
@@ -1429,6 +1504,167 @@
                 }
             }
         }
+    }
+
+    // ===== PET MANAGEMENT MODAL FUNCTIONS =====
+
+    // Open pets modal and load client's pets
+    window.openPetsModal = function (clienteId, clienteNombre) {
+        // Set client name in modal title
+        document.getElementById('clienteNombreModal').textContent = clienteNombre;
+
+        // Load pets data
+        loadClientPets(clienteId);
+
+        // Open modal
+        const modal = new bootstrap.Modal(document.getElementById('verMascotasModal'));
+        modal.show();
+    };
+
+    // Load client pets via Django template (simplified version)
+    function loadClientPets(clienteId) {
+        const tableBody = document.getElementById('mascotasTableBody');
+        const noMascotasMsg = document.getElementById('noMascotasMessage');
+        const tableContainer = document.getElementById('mascotasTableContainer');
+
+        // Clear existing content
+        tableBody.innerHTML = '';
+
+        // Fetch pets from server
+        fetch(`/api/cliente/${clienteId}/mascotas/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.length === 0) {
+                    tableContainer.style.display = 'none';
+                    noMascotasMsg.style.display = 'block';
+                } else {
+                    tableContainer.style.display = 'block';
+                    noMascotasMsg.style.display = 'none';
+
+                    data.forEach(pet => {
+                        const row = createPetRow(pet);
+                        tableBody.appendChild(row);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error loading pets:', error);
+                tableBody.innerHTML = '<tr><td colspan="6" class="text-danger">Error al cargar mascotas</td></tr>';
+            });
+    }
+
+    // Create a pet table row
+    function createPetRow(pet) {
+        const tr = document.createElement('tr');
+        tr.id = `pet-row-${pet.id}`;
+        tr.innerHTML = `
+            <td><span class="pet-nombre">${pet.nombre}</span><input type="text" class="form-control form-control-sm pet-nombre-edit" value="${pet.nombre}" style="display:none;"></td>
+            <td><span class="pet-especie">${pet.especie}</span><input type="text" class="form-control form-control-sm pet-especie-edit" value="${pet.especie}" style="display:none;"></td>
+            <td><span class="pet-raza">${pet.raza || '-'}</span><input type="text" class="form-control form-control-sm pet-raza-edit" value="${pet.raza || ''}" style="display:none;"></td>
+            <td><span class="pet-genero">${pet.genero || '-'}</span><select class="form-select form-select-sm pet-genero-edit" style="display:none;"><option value="Macho" ${pet.genero === 'Macho' ? 'selected' : ''}>Macho</option><option value="Hembra" ${pet.genero === 'Hembra' ? 'selected' : ''}>Hembra</option></select></td>
+            <td><span class="pet-fecha">${pet.fecha_nacimiento || '-'}</span><input type="date" class="form-control form-control-sm pet-fecha-edit" value="${pet.fecha_nacimiento || ''}" style="display:none;"></td>
+            <td>
+                <button class="btn btn-sm btn-outline-primary btn-edit-pet" onclick="editPet(${pet.id})"><i class="fa-solid fa-edit"></i></button>
+                <button class="btn btn-sm btn-success btn-save-pet" onclick="savePet(${pet.id})" style="display:none;"><i class="fa-solid fa-save"></i></button>
+                <button class="btn btn-sm btn-secondary btn-cancel-pet" onclick="cancelEdit(${pet.id})" style="display:none;"><i class="fa-solid fa-times"></i></button>
+            </td>
+        `;
+        return tr;
+    }
+
+    // Edit pet - enable inline editing
+    window.editPet = function (petId) {
+        const row = document.getElementById(`pet-row-${petId}`);
+
+        // Hide display spans, show input fields
+        row.querySelectorAll('span[class^="pet-"]').forEach(span => span.style.display = 'none');
+        row.querySelectorAll('input[class*="-edit"], select[class*="-edit"]').forEach(input => input.style.display = 'block');
+
+        // Toggle buttons
+        row.querySelector('.btn-edit-pet').style.display = 'none';
+        row.querySelector('.btn-save-pet').style.display = 'inline-block';
+        row.querySelector('.btn-cancel-pet').style.display = 'inline-block';
+    };
+
+    // Save pet changes
+    window.savePet = function (petId) {
+        const row = document.getElementById(`pet-row-${petId}`);
+
+        const petData = {
+            nombre: row.querySelector('.pet-nombre-edit').value,
+            especie: row.querySelector('.pet-especie-edit').value,
+            raza: row.querySelector('.pet-raza-edit').value,
+            genero: row.querySelector('.pet-genero-edit').value,
+            fecha_nacimiento: row.querySelector('.pet-fecha-edit').value
+        };
+
+        // Send update to server
+        fetch(`/api/mascota/${petId}/editar/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(petData)
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update display values
+                    row.querySelector('.pet-nombre').textContent = petData.nombre;
+                    row.querySelector('.pet-especie').textContent = petData.especie;
+                    row.querySelector('.pet-raza').textContent = petData.raza || '-';
+                    row.querySelector('.pet-genero').textContent = petData.genero || '-';
+                    row.querySelector('.pet-fecha').textContent = petData.fecha_nacimiento || '-';
+
+                    // Exit edit mode
+                    cancelEdit(petId);
+
+                    // Show success notification in modal
+                    showPetNotification('Mascota actualizada correctamente', 'success');
+                } else {
+                    // Show error notification in modal
+                    showPetNotification('Error al actualizar mascota: ' + (data.error || 'Error desconocido'), 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Show error notification in modal
+                showPetNotification('Error al guardar cambios', 'danger');
+            });
+    };
+
+    // Cancel edit - restore display mode
+    window.cancelEdit = function (petId) {
+        const row = document.getElementById(`pet-row-${petId}`);
+
+        // Show display spans, hide input fields
+        row.querySelectorAll('span[class^="pet-"]').forEach(span => span.style.display = 'inline');
+        row.querySelectorAll('input[class*="-edit"], select[class*="-edit"]').forEach(input => input.style.display = 'none');
+
+        // Toggle buttons
+        row.querySelector('.btn-edit-pet').style.display = 'inline-block';
+        row.querySelector('.btn-save-pet').style.display = 'none';
+        row.querySelector('.btn-cancel-pet').style.display = 'none';
+    };
+
+    // Show notification in pet modal
+    function showPetNotification(message, type) {
+        const notification = document.getElementById('petModalNotification');
+        const notificationText = document.getElementById('petModalNotificationText');
+
+        // Set message and type
+        notificationText.textContent = message;
+        notification.className = `alert alert-${type} alert-dismissible fade show`;
+        notification.style.display = 'block';
+
+        // Auto-hide after 3 seconds
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 150);
+        }, 3000);
     }
 </script>
 

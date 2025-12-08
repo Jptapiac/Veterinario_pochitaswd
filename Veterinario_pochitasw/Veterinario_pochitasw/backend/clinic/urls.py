@@ -16,7 +16,9 @@ from .views import (
     # Cliente
     agregar_mascota_cliente,
     # API Views
-    guardar_atencion, registrar_atencion_walkin
+    guardar_atencion, registrar_atencion_walkin,
+    # Pet Management API
+    api_mascotas_cliente, api_editar_mascota
 )
 
 router = DefaultRouter()
@@ -66,6 +68,9 @@ urlpatterns = [
     path('api/citas/<int:cita_id>/guardar_atencion/', guardar_atencion, name='guardar_atencion'),
     # Walk-in Atención
     path('api/lista-espera/<int:lista_id>/registrar_atencion/', registrar_atencion_walkin, name='registrar_atencion_walkin'),
+    # Pet Management API
+    path('cliente/<int:cliente_id>/mascotas/', api_mascotas_cliente, name='api_mascotas_cliente'),
+    path('mascota/<int:mascota_id>/editar/', api_editar_mascota, name='api_editar_mascota'),
     path('quienes-somos/', quienes_somos, name='quienes_somos'),
     path('contacto/', contacto, name='contacto'),
 ]
