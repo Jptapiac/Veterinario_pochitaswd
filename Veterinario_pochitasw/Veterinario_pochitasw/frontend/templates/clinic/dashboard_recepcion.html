@@ -307,36 +307,40 @@
             </div>
         </div>
 
-        <!-- Lista Espera -->
+        <!-- Lista Espera (Walk-in Queue) -->
         <div class="tab-pane fade" id="espera" role="tabpanel">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Fecha Solicitud</th>
-                                <th>Cliente</th>
-                                <th>Preferencia</th>
-                                <th>Estado</th>
-                                <th>Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for item in lista_espera %}
-                            <tr>
-                                <td>{{ item.fecha_solicitud|date:"d/m/Y" }}</td>
-                                <td>{{ item.cliente.nombre }} {{ item.cliente.apellido }}</td>
-                                <td>{{ item.preferencia }}</td>
-                                <td>{{ item.estado }}</td>
-                                <td><button class="btn btn-sm btn-success">Asignar Cupo</button></td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center">Lista de espera vacía.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Cola de Atención Walk-in</h5>
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#registrarWalkinModal">
+                            <i class="fa-solid fa-user-plus me-2"></i>Registrar Walk-in
+                        </button>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="tabla-walkin">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Cliente</th>
+                                    <th>Mascota</th>
+                                    <th>Motivo</th>
+                                    <th>Prioridad</th>
+                                    <th>Tiempo Espera</th>
+                                    <th>Estado</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="walkin-tbody">
+                                <tr>
+                                    <td colspan="8" class="text-center py-4">
+                                        <i class="fa-solid fa-spinner fa-spin me-2"></i>Cargando cola...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -345,8 +349,9 @@
         <div class="tab-pane fade" id="clientes" role="tabpanel">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <input type="text" class="form-control mb-3" placeholder="Buscar cliente por RUT o Nombre...">
-                    <table class="table">
+                    <input type="text" id="buscador-clientes" class="form-control mb-3"
+                        placeholder="Buscar cliente por RUT o Nombre..." onkeyup="filtrarClientes()">
+                    <table class="table" id="tabla-clientes">
                         <thead>
                             <tr>
                                 <th>RUT</th>
@@ -392,8 +397,8 @@
                         <select class="form-select" name="mascota" required>
                             <option value="">Seleccionar Mascota (y Dueño)...</option>
                             {% for m in mascotas %}
-                            <option value="{{ m.id }}">{{ m.nombre }} - {{ m.especie }} (Dueño: {{
-                                m.cliente.nombre }} {{ m.cliente.apellido }})</option>
+                            <option value="{{ m.id }}">{{ m.nombre }} - {{ m.especie }} (Dueño: {{ m.cliente.nombre }}
+                                {{ m.cliente.apellido }})</option>
                             {% endfor %}
                         </select>
                     </div>
@@ -408,7 +413,8 @@
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Fecha y Hora</label>
-                        <input type="datetime-local" class="form-control" name="fecha_hora" required>
+                        <input type="datetime-local" class="form-control" name="fecha_hora" min="2025-01-01T00:00"
+                            max="2026-12-31T23:59" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Tipo</label>
@@ -1009,6 +1015,421 @@
     {% else %}
     window.allAppointments = [];
     {% endif %}
+</script>
+
+<!-- Modal: Registrar Walk-in -->
+<div class="modal fade" id="registrarWalkinModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Registrar Paciente Walk-in</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-walkin">
+                    <div class="mb-3">
+                        <label class="form-label">Cliente *</label>
+                        <select class="form-select" id="walkin-cliente" required>
+                            <option value="">Seleccione cliente...</option>
+                            {% for cliente in clientes %}
+                            <option value="{{ cliente.id }}">{{ cliente.nombre }} {{ cliente.apellido }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Mascota *</label>
+                        <select class="form-select" id="walkin-mascota" required disabled>
+                            <option value="">Primero seleccione un cliente</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Motivo de la visita *</label>
+                        <textarea class="form-control" id="walkin-motivo" rows="3" required
+                            placeholder="Ej: Vacuna antirrábica, Control general, Herida en pata..."></textarea>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Prioridad</label>
+                        <div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="prioridad" id="prioridad-normal"
+                                    value="NORMAL" checked>
+                                <label class="form-check-label" for="prioridad-normal">
+                                    <i class="fa-solid fa-circle text-success"></i> Normal
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="prioridad" id="prioridad-urgente"
+                                    value="URGENTE">
+                                <label class="form-check-label" for="prioridad-urgente">
+                                    <i class="fa-solid fa-circle text-danger"></i> Urgente
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" onclick="registrarWalkin()">
+                    <i class="fa-solid fa-check me-2"></i>Registrar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reagendar Cita Modal -->
+<div class="modal fade" id="reagendarCitaModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reagendar Cita</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="form-reagendar" method="POST" action="">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p><strong>Paciente:</strong> <span id="reagendar-mascota"></span></p>
+
+                    <div class="mb-3">
+                        <label for="reagendar-fecha" class="form-label">Nueva Fecha y Hora *</label>
+                        <input type="datetime-local" class="form-control" id="reagendar-fecha" name="fecha_hora"
+                            required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reagendar-veterinario" class="form-label">Veterinario *</label>
+                        <select class="form-select" id="reagendar-veterinario" name="veterinario" required>
+                            {% for vet in veterinarios %}
+                            <option value="{{ vet.id }}">Dr. {{ vet.nombre }} {{ vet.apellido }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="reagendar-urgencia" name="es_urgencia">
+                            <label class="form-check-label" for="reagendar-urgencia">Es Urgencia (Permite
+                                Domingos/Feriados)</label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="reagendar-motivo" class="form-label">Motivo de Reagendamiento *</label>
+                        <textarea class="form-control" id="reagendar-motivo" name="motivo_reagendamiento" rows="2"
+                            required placeholder="Indique la razón del cambio..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Walk-in Queue JavaScript -->
+<script>
+    // CSRF Token global
+    const csrftoken = '{{ csrf_token }}';
+
+    // Abrir modal de reagendar (función global)
+    window.openRescheduleModal = function (data) {
+        // data: {id, start, veterinario_id, mascota}
+        const modalEl = document.getElementById('reagendarCitaModal');
+        if (!modalEl) {
+            console.error('Modal de reagendar no encontrado');
+            return;
+        }
+
+        document.getElementById('reagendar-mascota').textContent = data.mascota;
+        document.getElementById('reagendar-fecha').value = data.start;
+        document.getElementById('reagendar-veterinario').value = data.veterinario_id;
+        document.getElementById('reagendar-motivo').value = ''; // Limpiar motivo anterior
+        // Reset checkbox
+        document.getElementById('reagendar-urgencia').checked = false;
+
+        // Configurar action del form
+        const form = document.getElementById('form-reagendar');
+        form.action = `/api/dashboard/reagendar_cita/${data.id}/`;
+
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    };
+
+    // Cargar mascotas cuando se selecciona un cliente
+    document.getElementById('walkin-cliente')?.addEventListener('change', function () {
+        const clienteId = this.value;
+        const mascotaSelect = document.getElementById('walkin-mascota');
+
+        if (!clienteId) {
+            mascotaSelect.disabled = true;
+            mascotaSelect.innerHTML = '<option value="">Primero seleccione un cliente</option>';
+            return;
+        }
+
+        // Filtrar mascotas del cliente seleccionado
+        console.log(`Cargando mascotas para cliente ID: ${clienteId}`);
+        fetch(`/api/mascotas/?cliente=${clienteId}`)
+            .then(r => {
+                console.log('Response status:', r.status);
+                if (!r.ok) {
+                    throw new Error(`HTTP error! status: ${r.status}`);
+                }
+                return r.json();
+            })
+            .then(data => {
+                console.log('Data recibida:', data);
+                // DRF devuelve {results: [...]} cuando hay paginación
+                const mascotas = data.results || data;
+                console.log('Mascotas:', mascotas);
+
+                mascotaSelect.disabled = false;
+                mascotaSelect.innerHTML = '<option value="">Seleccione mascota...</option>';
+
+                if (mascotas.length === 0) {
+                    mascotaSelect.innerHTML += '<option value="">Este cliente no tiene mascotas</option>';
+                    return;
+                }
+
+                mascotas.forEach(m => {
+                    mascotaSelect.innerHTML += `<option value="${m.id}">${m.nombre} (${m.especie})</option>`;
+                });
+            })
+            .catch(err => {
+                console.error('Error completo:', err);
+                console.error('Error cargando mascotas:', err.message);
+                mascotaSelect.innerHTML = `<option value="">Error: ${err.message}</option>`;
+            });
+    });
+
+    // Registrar nuevo walk-in
+    function registrarWalkin() {
+        const form = document.getElementById('form-walkin');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const data = {
+            cliente: document.getElementById('walkin-cliente').value,
+            mascota: document.getElementById('walkin-mascota').value,
+            motivo: document.getElementById('walkin-motivo').value,
+            prioridad: document.querySelector('input[name="prioridad"]:checked').value,
+            estado: 'ESPERANDO'
+        };
+
+        fetch('/api/lista-espera/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify(data)
+        })
+            .then(r => r.json())
+            .then(result => {
+                // Cerrar modal
+                bootstrap.Modal.getInstance(document.getElementById('registrarWalkinModal')).hide();
+                // Limpiar formulario
+                form.reset();
+                document.getElementById('walkin-mascota').disabled = true;
+                // Recargar cola
+                cargarColaWalkin();
+                // Paciente registrado exitosamente (sin alert molesto)
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Error al registrar paciente');
+            });
+    }
+
+    // Cargar cola del día
+    function cargarColaWalkin() {
+        fetch('/api/lista-espera/hoy/')
+            .then(r => r.json())
+            .then(cola => {
+                const tbody = document.getElementById('walkin-tbody');
+
+                if (cola.length === 0) {
+                    tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">
+                            <i class="fa-solid fa-inbox me-2"></i>No hay pacientes en espera
+                        </td>
+                    </tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = cola.map(p => {
+                    const prioridadBadge = p.prioridad === 'URGENTE'
+                        ? '<span class="badge bg-danger">Urgente</span>'
+                        : '<span class="badge bg-success">Normal</span>';
+
+                    const estadoBadge = p.estado === 'ESPERANDO'
+                        ? '<span class="badge bg-warning text-dark">En Espera</span>'
+                        : '<span class="badge bg-info">En Atención</span>';
+
+                    const tiempoEspera = p.tiempo_espera
+                        ? `${p.tiempo_espera} min`
+                        : '-';
+
+                    const acciones = p.estado === 'ESPERANDO'
+                        ? `<button class="btn btn-sm btn-primary me-1" onclick="llamarSiguiente(${p.id})">
+                           <i class="fa-solid fa-bell"></i> Llamar
+                       </button>
+                       <button class="btn btn-sm btn-danger" onclick="cancelarTurno(${p.id})">
+                           <i class="fa-solid fa-times"></i>
+                       </button>`
+                        : `<button class="btn btn-sm btn-success" onclick="marcarAtendido(${p.id})">
+                           <i class="fa-solid fa-check"></i> Atendido
+                       </button>`;
+
+                    return `
+                    <tr>
+                        <td><strong>#${String(p.numero_turno).padStart(3, '0')}</strong></td>
+                        <td>${p.cliente_nombre || 'N/A'}</td>
+                        <td>${p.mascota_nombre || 'N/A'}</td>
+                        <td>${p.motivo || '-'}</td>
+                        <td>${prioridadBadge}</td>
+                        <td>${tiempoEspera}</td>
+                        <td>${estadoBadge}</td>
+                        <td>${acciones}</td>
+                    </tr>`;
+                }).join('');
+            })
+            .catch(err => {
+                console.error('Error cargando cola:', err);
+                document.getElementById('walkin-tbody').innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-danger">
+                        <i class="fa-solid fa-exclamation-triangle me-2"></i>Error cargando cola
+                    </td>
+                </tr>`;
+            });
+    }
+
+    // Llamar siguiente paciente
+    function llamarSiguiente(id) {
+
+
+        fetch(`/api/lista-espera/${id}/llamar_siguiente/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        })
+            .then(r => r.json())
+            .then(() => {
+                cargarColaWalkin();
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Error al llamar paciente');
+            });
+    }
+
+    // Marcar como atendido
+    function marcarAtendido(id) {
+
+
+        fetch(`/api/lista-espera/${id}/marcar_atendido/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        })
+            .then(r => r.json())
+            .then(() => {
+                cargarColaWalkin();
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Error al marcar como atendido');
+            });
+    }
+
+    // Cancelar turno
+    function cancelarTurno(id) {
+        if (!confirm('¿Cancelar este turno?')) return;
+
+        fetch(`/api/lista-espera/${id}/cancelar_turno/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        })
+            .then(r => r.json())
+            .then(() => {
+                cargarColaWalkin();
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Error al cancelar turno');
+            });
+    }
+
+    // Helper para CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Cargar cola al cambiar al tab
+    document.getElementById('espera-tab')?.addEventListener('shown.bs.tab', function () {
+        cargarColaWalkin();
+    });
+
+    // Auto-refresh cada 30 segundos si el tab está activo
+    setInterval(function () {
+        const esperaTab = document.getElementById('espera');
+        if (esperaTab && esperaTab.classList.contains('active')) {
+            cargarColaWalkin();
+        }
+    }, 30000);
+
+    // Filtro de Clientes en tiempo real
+    function filtrarClientes() {
+        const input = document.getElementById("buscador-clientes");
+        const filter = input.value.toUpperCase();
+        const table = document.getElementById("tabla-clientes");
+        const tr = table.getElementsByTagName("tr");
+
+        // Recorrer todas las filas de la tabla (empezando en 1 para saltar el header)
+        for (let i = 1; i < tr.length; i++) {
+            // Columna 0: RUT, Columna 1: Nombre
+            const tdRut = tr[i].getElementsByTagName("td")[0];
+            const tdNombre = tr[i].getElementsByTagName("td")[1];
+
+            if (tdRut || tdNombre) {
+                const txtRut = tdRut.textContent || tdRut.innerText;
+                const txtNombre = tdNombre.textContent || tdNombre.innerText;
+
+                if (txtRut.toUpperCase().indexOf(filter) > -1 || txtNombre.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
+            }
+        }
+    }
 </script>
 
 {% endblock %}

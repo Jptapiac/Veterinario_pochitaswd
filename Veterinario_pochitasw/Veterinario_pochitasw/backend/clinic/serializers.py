@@ -42,9 +42,22 @@ class AtencionSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class ListaEsperaSerializer(serializers.ModelSerializer):
+    cliente_nombre = serializers.ReadOnlyField(source='cliente.nombre')
+    mascota_nombre = serializers.ReadOnlyField(source='mascota.nombre')
+    veterinario_nombre = serializers.ReadOnlyField(source='veterinario_asignado.nombre')
+    tiempo_espera = serializers.SerializerMethodField()
+    
     class Meta:
         model = ListaEspera
         fields = '__all__'
+    
+    def get_tiempo_espera(self, obj):
+        """Calcula el tiempo de espera en minutos"""
+        if obj.estado == ListaEspera.Estado.ESPERANDO:
+            from django.utils import timezone
+            delta = timezone.now() - obj.fecha_solicitud
+            return int(delta.total_seconds() / 60)
+        return None
 
 class ProductoSerializer(serializers.ModelSerializer):
     class Meta:

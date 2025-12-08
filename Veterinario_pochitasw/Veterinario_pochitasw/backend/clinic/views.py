@@ -302,12 +302,43 @@ def dashboard_veterinario(request):
          return redirect('index')
     
     try:
+        if not hasattr(request.user, 'perfil_veterinario'):
+            raise Exception("Usuario has no perfil_veterinario")
+            
         vet = request.user.perfil_veterinario
+        # Citas agendadas
         citas_hoy = Cita.objects.filter(veterinario=vet).order_by('fecha_hora')
-    except:
+        
+        # Walk-ins asignados a este veterinario (En Atención)
+        walkins_asignados = ListaEspera.objects.filter(
+            veterinario_asignado=vet, 
+            estado=ListaEspera.Estado.EN_ATENCION
+        ).order_by('fecha_atencion')
+        
+        # Pool de pacientes esperando (Sin asignar o esperando)
+        # Mostramos todos los ESPERANDO para que el vet pueda elegir
+        walkins_espera = ListaEspera.objects.filter(
+            estado=ListaEspera.Estado.ESPERANDO
+        ).order_by('-prioridad', 'numero_turno') # Urgentes primero
+        
+        print(f"DEBUG: Walk-ins Espera Count: {walkins_espera.count()}")
+        
+    except Exception as e:
+        print(f"Error en dashboard vet: {e}")
+        error_msg = str(e)
+        if "pk" in str(e) or "perfil_veterinario" in str(e):
+             error_msg = "Este usuario no tiene un perfil de Veterinario asociado. Contacte al administrador."
+        
         citas_hoy = []
+        walkins_asignados = []
+        walkins_espera = []
     
-    return render(request, 'clinic/dashboard_veterinario.html', {'citas': citas_hoy})
+    return render(request, 'clinic/dashboard_veterinario.html', {
+        'citas': citas_hoy,
+        'walkins_asignados': walkins_asignados,
+        'walkins_espera': walkins_espera,
+        'debug_error': locals().get('error_msg', None)
+    })
 
 def crear_cita_recepcion(request):
     """
@@ -454,6 +485,13 @@ def reagendar_cita(request, cita_id):
                 
             if nuevo_vet_id:
                 cita.veterinario_id = nuevo_vet_id
+            
+            # Guardar motivo y fecha de reagendamiento (HU006)
+            motivo_reagendamiento = request.POST.get('motivo_reagendamiento', '').strip()
+            if motivo_reagendamiento:
+                cita.motivo_reagendamiento = motivo_reagendamiento
+                cita.fecha_reagendamiento = timezone.now()
+            
             cita.save()
             messages.success(request, f"Cita para {cita.mascota.nombre} reagendada correctamente.")
         except Cita.DoesNotExist:
@@ -776,6 +814,14 @@ class VeterinarioViewSet(viewsets.ModelViewSet):
 class MascotaViewSet(viewsets.ModelViewSet):
     queryset = Mascota.objects.all()
     serializer_class = MascotaSerializer
+    
+    def get_queryset(self):
+        """Filter mascotas by cliente if parameter is provided"""
+        queryset = Mascota.objects.all()
+        cliente_id = self.request.query_params.get('cliente', None)
+        if cliente_id is not None:
+            queryset = queryset.filter(cliente_id=cliente_id)
+        return queryset
 
 class CitaViewSet(viewsets.ModelViewSet):
     queryset = Cita.objects.all().order_by('fecha_hora')
@@ -798,6 +844,83 @@ class AtencionViewSet(viewsets.ModelViewSet):
 class ListaEsperaViewSet(viewsets.ModelViewSet):
     queryset = ListaEspera.objects.all()
     serializer_class = ListaEsperaSerializer
+    filterset_fields = ['estado', 'prioridad', 'veterinario_asignado']
+    
+    @action(detail=False, methods=['get'])
+    def hoy(self, request):
+        """Obtener cola de espera del día actual"""
+        from django.utils import timezone
+        today = timezone.now().date()
+        cola = ListaEspera.objects.filter(
+            fecha_solicitud__date=today,
+            estado__in=[ListaEspera.Estado.ESPERANDO, ListaEspera.Estado.EN_ATENCION]
+        ).order_by('numero_turno')
+        serializer = self.get_serializer(cola, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def llamar_siguiente(self, request, pk=None):
+        """Llamar al siguiente paciente en la cola"""
+        from django.utils import timezone
+        
+        paciente = self.get_object()
+        veterinario_id = request.data.get('veterinario_id')
+        
+        if paciente.estado != ListaEspera.Estado.ESPERANDO:
+            return Response(
+                {'error': 'Este paciente no está en espera'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Actualizar estado
+        paciente.estado = ListaEspera.Estado.EN_ATENCION
+        paciente.fecha_atencion = timezone.now()
+        
+        if veterinario_id:
+            try:
+                veterinario = Veterinario.objects.get(id=veterinario_id)
+                paciente.veterinario_asignado = veterinario
+            except Veterinario.DoesNotExist:
+                pass
+        
+        paciente.save()
+        
+        serializer = self.get_serializer(paciente)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def marcar_atendido(self, request, pk=None):
+        """Marcar paciente como atendido"""
+        paciente = self.get_object()
+        
+        if paciente.estado != ListaEspera.Estado.EN_ATENCION:
+            return Response(
+                {'error': 'Este paciente no está en atención'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        paciente.estado = ListaEspera.Estado.ATENDIDO
+        paciente.save()
+        
+        serializer = self.get_serializer(paciente)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def cancelar_turno(self, request, pk=None):
+        """Cancelar turno de un paciente"""
+        paciente = self.get_object()
+        
+        if paciente.estado in [ListaEspera.Estado.ATENDIDO, ListaEspera.Estado.CANCELADO]:
+            return Response(
+                {'error': 'Este turno ya fue procesado'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        paciente.estado = ListaEspera.Estado.CANCELADO
+        paciente.save()
+        
+        serializer = self.get_serializer(paciente)
+        return Response(serializer.data)
 
 class ProductoViewSet(viewsets.ModelViewSet):
     queryset = Producto.objects.all()

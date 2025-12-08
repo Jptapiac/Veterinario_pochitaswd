@@ -115,6 +115,10 @@ class Cita(models.Model):
     motivo_cancelacion = models.TextField(blank=True)
     fecha_cancelacion = models.DateTimeField(null=True, blank=True)
     
+    # Campos para HU006 - Proceso de reagendamiento
+    motivo_reagendamiento = models.TextField(blank=True, help_text="Motivo del cambio de fecha/hora")
+    fecha_reagendamiento = models.DateTimeField(null=True, blank=True, help_text="Última vez que se reagendó")
+    
     # Campo helper para saber si ya se procesó en atención
     
     def __str__(self):
@@ -122,17 +126,54 @@ class Cita(models.Model):
 
 class ListaEspera(models.Model):
     class Estado(models.TextChoices):
+        # Nuevos estados para walk-in
+        ESPERANDO = 'ESPERANDO', _('En Espera')
+        EN_ATENCION = 'EN_ATENCION', _('En Atención')
+        ATENDIDO = 'ATENDIDO', _('Atendido')
+        CANCELADO = 'CANCELADO', _('Cancelado')
+        # Estados antiguos (mantener compatibilidad)
         PENDIENTE = 'PENDIENTE', _('Pendiente')
         CONTACTADO = 'CONTACTADO', _('Contactado')
-        CERRADO = 'CERRADO', _('Cerrado') # Ya agendó o desistió
+        CERRADO = 'CERRADO', _('Cerrado')
+    
+    class Prioridad(models.TextChoices):
+        NORMAL = 'NORMAL', _('Normal')
+        URGENTE = 'URGENTE', _('Urgente')
 
+    # Campos existentes
     cliente = models.ForeignKey(Cliente, on_delete=models.CASCADE, related_name='lista_espera')
     fecha_solicitud = models.DateTimeField(auto_now_add=True)
-    estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.PENDIENTE)
-    preferencia = models.TextField(help_text="Preferencia de horario o doctor")
+    estado = models.CharField(max_length=20, choices=Estado.choices, default=Estado.ESPERANDO)
+    preferencia = models.TextField(blank=True, help_text="Preferencia de horario o doctor")
+    
+    # Nuevos campos para walk-in
+    mascota = models.ForeignKey('Mascota', on_delete=models.CASCADE, related_name='lista_espera', null=True, blank=True)
+    motivo = models.TextField(blank=True, help_text="Motivo de la visita")
+    prioridad = models.CharField(max_length=10, choices=Prioridad.choices, default=Prioridad.NORMAL)
+    numero_turno = models.IntegerField(null=True, blank=True, help_text="Número en la cola del día")
+    veterinario_asignado = models.ForeignKey('Veterinario', on_delete=models.SET_NULL, null=True, blank=True, related_name='pacientes_espera')
+    fecha_atencion = models.DateTimeField(null=True, blank=True, help_text="Fecha y hora de inicio de atención")
+
+    class Meta:
+        ordering = ['numero_turno', 'fecha_solicitud']
+        verbose_name = 'Lista de Espera'
+        verbose_name_plural = 'Listas de Espera'
 
     def __str__(self):
+        if self.mascota:
+            return f"Turno {self.numero_turno}: {self.cliente.nombre} - {self.mascota.nombre}"
         return f"Espera: {self.cliente.nombre} - {self.fecha_solicitud}"
+    
+    def save(self, *args, **kwargs):
+        # Auto-asignar número de turno si es walk-in nuevo
+        if not self.pk and not self.numero_turno and self.estado == self.Estado.ESPERANDO:
+            # Obtener el último turno del día
+            today = timezone.now().date()
+            ultimo_turno = ListaEspera.objects.filter(
+                fecha_solicitud__date=today
+            ).aggregate(models.Max('numero_turno'))['numero_turno__max']
+            self.numero_turno = (ultimo_turno or 0) + 1
+        super().save(*args, **kwargs)
 
 class Atencion(models.Model):
     cita = models.OneToOneField(Cita, on_delete=models.CASCADE, related_name='atencion')

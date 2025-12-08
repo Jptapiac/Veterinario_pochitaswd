@@ -10,6 +10,90 @@
             {% else %}
             <p class="text-muted">Bienvenido, {{ user.first_name }} {{ user.last_name }}</p>
             {% endif %}
+
+            {% if debug_error %}
+            <div class="alert alert-danger">
+                <strong>Debug Error:</strong> {{ debug_error }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Walk-in Queue Section -->
+    <div class="row mb-4">
+        <!-- Mis Pacientes en Atención -->
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0 card-title"><i class="fa-solid fa-user-doctor me-2"></i>En Atención (Walk-in)</h5>
+                </div>
+                <div class="card-body">
+                    {% if walkins_asignados %}
+                    <div class="list-group list-group-flush">
+                        {% for paciente in walkins_asignados %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1 fw-bold">{{ paciente.mascota.nombre }} <small class="text-muted">({{
+                                        paciente.mascota.especie }})</small></h6>
+                                <div class="small text-muted">{{ paciente.cliente.nombre }} {{ paciente.cliente.apellido
+                                    }}</div>
+                                <div class="badge bg-info text-dark">{{ paciente.motivo }}</div>
+                            </div>
+                            <button class="btn btn-success btn-sm" onclick="finalizarAtencion({{ paciente.id }})">
+                                <i class="fa-solid fa-check me-1"></i>Finalizar
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fa-solid fa-mug-hot fa-2x mb-2"></i>
+                        <p class="mb-0">No tienes pacientes walk-in activos.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Pool de Espera -->
+        <div class="col-md-6 mb-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-warning text-dark py-3">
+                    <h5 class="mb-0 card-title"><i class="fa-solid fa-clock me-2"></i>En Espera (Pool)</h5>
+                </div>
+                <div class="card-body">
+                    {% if walkins_espera %}
+                    <div class="list-group list-group-flush">
+                        {% for paciente in walkins_espera %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <div class="d-flex align-items-center">
+                                    <span class="badge bg-secondary me-2">#{{ paciente.numero_turno }}</span>
+                                    <h6 class="mb-0 fw-bold">{{ paciente.mascota.nombre }}</h6>
+                                </div>
+                                <div class="small text-muted mb-1">{{ paciente.cliente.nombre }} {{
+                                    paciente.cliente.apellido }}</div>
+                                {% if paciente.prioridad == 'URGENTE' %}
+                                <span class="badge bg-danger">URGENTE</span>
+                                {% else %}
+                                <span class="badge bg-light text-dark border">Normal</span>
+                                {% endif %}
+                                <span class="small text-muted ms-2">{{ paciente.motivo|truncatechars:20 }}</span>
+                            </div>
+                            <button class="btn btn-primary btn-sm" onclick="atenderPaciente({{ paciente.id }})">
+                                <i class="fa-solid fa-hand-holding-medical me-1"></i>Atender
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="fa-regular fa-face-smile fa-2x mb-2"></i>
+                        <p class="mb-0">No hay pacientes esperando.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 
@@ -117,4 +201,52 @@
         </div>
     </div>
 </div>
+</div>
+
+<script>
+    const vetId = {% if user.perfil_veterinario %}{ { user.perfil_veterinario.id } } {% else %} null{% endif %};
+    const csrftoken = '{{ csrf_token }}';
+
+    function atenderPaciente(id) {
+        if (!confirm('¿Atender a este paciente?')) return;
+
+        // Usamos llamar_siguiente que setea EN_ATENCION y asigna vet
+        fetch(`/api/lista-espera/${id}/llamar_siguiente/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ veterinario_id: vetId })
+        })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Error al asignar paciente');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function finalizarAtencion(id) {
+        if (!confirm('¿Finalizar atención de este paciente?')) return;
+
+        fetch(`/api/lista-espera/${id}/marcar_atendido/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        })
+            .then(response => {
+                if (response.ok) {
+                    window.location.reload();
+                } else {
+                    alert('Error al finalizar atención');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+</script>
 {% endblock %}
