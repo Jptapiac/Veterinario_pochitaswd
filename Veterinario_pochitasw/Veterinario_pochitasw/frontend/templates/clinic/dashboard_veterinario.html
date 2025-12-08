@@ -165,7 +165,7 @@
                 <h5 class="modal-title">Registro de Atención - <span id="modalMascotaNombre"></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <form method="post" id="atencionForm" action="">
+            <form id="atencionForm" action="">
                 {% csrf_token %}
                 <div class="modal-body">
                     <div class="mb-3">
@@ -177,13 +177,9 @@
                         <textarea class="form-control" name="tratamiento" rows="3" required></textarea>
                     </div>
                     <div class="row">
-                        <div class="col-md-6 mb-3">
+                        <div class="col-md-12 mb-3">
                             <label class="form-label">Medicamentos</label>
                             <input type="text" class="form-control" name="medicamentos">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Costo Estimado (CLP)</label>
-                            <input type="number" class="form-control" name="costo_estimado" min="0" value="0">
                         </div>
                     </div>
                     <div class="form-check mb-3">
@@ -263,7 +259,7 @@
                 .then(response => {
                     if (response.ok) {
                         alert('Atención guardada exitosamente');
-                        window.location.reload();
+                        window.location.href = window.location.pathname + '?t=' + new Date().getTime();
                     } else {
                         return response.json().then(err => {
                             throw new Error(err.error || 'Error al guardar');
@@ -293,7 +289,7 @@
             .then(response => {
                 if (response.ok) {
                     alert('Paciente asignado correctamente');
-                    window.location.reload();
+                    window.location.href = window.location.pathname + '?t=' + new Date().getTime();
                 } else {
                     return response.json().then(err => {
                         throw new Error(err.error || 'Error al asignar paciente');

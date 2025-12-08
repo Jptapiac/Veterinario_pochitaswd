@@ -307,8 +307,11 @@ def dashboard_veterinario(request):
             raise Exception("Usuario has no perfil_veterinario")
             
         vet = request.user.perfil_veterinario
-        # Citas agendadas
-        citas_hoy = Cita.objects.filter(veterinario=vet).order_by('fecha_hora')
+        # Citas agendadas (Solo pendientes)
+        citas_hoy = Cita.objects.filter(
+            veterinario=vet,
+            estado__in=[Cita.Estado.AGENDADA, Cita.Estado.CONFIRMADA]
+        ).order_by('fecha_hora')
         
         # Walk-ins asignados a este veterinario (En Atención)
         walkins_asignados = ListaEspera.objects.filter(
