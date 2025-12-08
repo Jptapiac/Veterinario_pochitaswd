@@ -61,6 +61,90 @@
         transform: scale(1.02);
         z-index: 20;
     }
+
+    /* Month Calendar Grid */
+    .calendar-month-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 1px;
+        background-color: #dee2e6;
+        border: 1px solid #dee2e6;
+    }
+
+    .calendar-day-header {
+        background-color: #f8f9fa;
+        padding: 12px;
+        text-align: center;
+        font-weight: 600;
+        color: #495057;
+        border-bottom: 2px solid #dee2e6;
+    }
+
+    .calendar-day-cell {
+        background-color: white;
+        min-height: 100px;
+        padding: 8px;
+        position: relative;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .calendar-day-cell:hover {
+        background-color: #f8f9fa;
+    }
+
+    .calendar-day-cell.other-month {
+        background-color: #f8f9fa;
+        opacity: 0.5;
+    }
+
+    .calendar-day-cell.today {
+        background-color: #e7f3ff;
+        border: 2px solid #0d6efd;
+    }
+
+    .calendar-day-cell.weekend {
+        background-color: #fff8f0;
+    }
+
+    .calendar-day-cell.holiday {
+        background-color: #ffe6e6;
+    }
+
+    .day-number {
+        display: block;
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 4px;
+        color: #212529;
+    }
+
+    .holiday-name {
+        font-size: 10px;
+        color: #dc3545;
+        font-weight: 600;
+        display: block;
+        margin-top: 2px;
+    }
+
+    .appointment-block {
+        font-size: 11px;
+        padding: 2px 4px;
+        margin: 2px 0;
+        border-radius: 3px;
+        background-color: #0d6efd;
+        color: white;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .more-appointments {
+        font-size: 10px;
+        color: #6c757d;
+        font-weight: 600;
+        margin-top: 4px;
+    }
 </style>
 <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -99,9 +183,11 @@
                         <div class="btn-group" role="group">
                             <button type="button" class="btn btn-outline-primary active" id="btn-view-list"
                                 onclick="switchView('list')"><i class="fa-solid fa-list me-2"></i>Lista</button>
-                            <button type="button" class="btn btn-outline-primary" id="btn-view-calendar"
-                                onclick="switchView('calendar')"><i
-                                    class="fa-solid fa-calendar-week me-2"></i>Calendario</button>
+                            <button type="button" class="btn btn-outline-primary" id="btn-view-week"
+                                onclick="switchView('week')"><i
+                                    class="fa-solid fa-calendar-week me-2"></i>Semana</button>
+                            <button type="button" class="btn btn-outline-primary" id="btn-view-month"
+                                onclick="switchView('month')"><i class="fa-solid fa-calendar-days me-2"></i>Mes</button>
                         </div>
                     </div>
 
@@ -193,6 +279,30 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Month View -->
+                    <div id="month-view" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <button class="btn btn-outline-secondary" onclick="navigateMonth(-1)">
+                                <i class="fa-solid fa-chevron-left"></i> Anterior
+                            </button>
+                            <h4 id="current-month-title">Diciembre 2025</h4>
+                            <button class="btn btn-outline-secondary" onclick="navigateMonth(1)">
+                                Siguiente <i class="fa-solid fa-chevron-right"></i>
+                            </button>
+                        </div>
+                        <div class="calendar-month-grid">
+                            <div class="calendar-day-header">Dom</div>
+                            <div class="calendar-day-header">Lun</div>
+                            <div class="calendar-day-header">Mar</div>
+                            <div class="calendar-day-header">Mié</div>
+                            <div class="calendar-day-header">Jue</div>
+                            <div class="calendar-day-header">Vie</div>
+                            <div class="calendar-day-header">Sáb</div>
+                            <!-- Day cells will be added by JavaScript -->
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -877,6 +987,28 @@
             checkInput.checked = false;
         }
     }
+</script>
+
+<!-- Calendar JavaScript -->
+<script src="{% static 'js/calendar.js' %}"></script>
+<script>
+    // Load appointment data
+    {% if citas %}
+    window.allAppointments = [
+        {% for cita in citas %}
+    {
+        id: { { cita.id } },
+        fecha_hora: '{{ cita.fecha_hora|date:"Y-m-d\TH:i" }}',
+            mascota_nombre: '{{ cita.mascota.nombre|escapejs }}',
+                tipo: '{{ cita.tipo|escapejs }}',
+                    veterinario_nombre: '{{ cita.veterinario.nombre|escapejs }}',
+                        estado: '{{ cita.estado|escapejs }}'
+    } {% if not forloop.last %}, {% endif %}
+    {% endfor %}
+    ];
+    {% else %}
+    window.allAppointments = [];
+    {% endif %}
 </script>
 
 {% endblock %}

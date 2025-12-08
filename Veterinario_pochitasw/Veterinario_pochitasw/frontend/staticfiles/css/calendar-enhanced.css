@@ -1,0 +1,389 @@
+/* ============================================
+   Enhanced Calendar Styles for Veterinaria Pochita
+   Uses existing color variables from base.html
+   ============================================ */
+
+/* Month View Container */
+.month-view-container {
+    display: none; /* Hidden by default, toggled via JS */
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Calendar Header with Navigation */
+.calendar-month-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--bg-light);
+}
+
+.calendar-month-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+.calendar-nav-btn {
+    background: var(--bg-light);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.calendar-nav-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    transform: scale(1.1);
+}
+
+/* Month Grid */
+.calendar-month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+/* Day Headers */
+.calendar-day-header {
+    text-align: center;
+    font-weight: 600;
+    color: var(--text-dark);
+    padding: 0.75rem 0;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.calendar-day-header.weekend {
+    color: var(--secondary-color);
+}
+
+/* Day Cells */
+.calendar-day-cell {
+    min-height: 100px;
+    background: white;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    padding: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.calendar-day-cell:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.15);
+    transform: translateY(-2px);
+}
+
+.calendar-day-cell.other-month {
+    background: #fafafa;
+    opacity: 0.5;
+}
+
+.calendar-day-cell.today {
+    border: 2px solid var(--primary-color);
+    background: rgba(74, 144, 226, 0.05);
+}
+
+.calendar-day-cell.weekend {
+    background: rgba(129, 199, 132, 0.03);
+}
+
+/* Day Number */
+.day-number {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+.calendar-day-cell.today .day-number {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.calendar-day-cell.other-month .day-number {
+    color: #adb5bd;
+}
+
+/* Appointment Blocks in Month View */
+.appointment-block {
+    background: var(--primary-color);
+    color: white;
+    padding: 3px 6px;
+    margin-bottom: 3px;
+    border-radius: 3px;
+    font-size: 0.7rem;
+    line-height: 1.2;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.appointment-block:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    z-index: 10;
+}
+
+/* Appointment Type Colors */
+.appointment-block.tipo-consulta,
+.appointment-block.tipo-control {
+    background: var(--primary-color);
+}
+
+.appointment-block.tipo-vacuna {
+    background: var(--secondary-color);
+}
+
+.appointment-block.tipo-general {
+    background: var(--accent-color);
+    color: var(--text-dark);
+}
+
+.appointment-block.tipo-urgencia {
+    background: #dc3545; /* Bootstrap danger */
+}
+
+.appointment-block.tipo-cirugia {
+    background: #0dcaf0; /* Bootstrap info */
+    color: var(--text-dark);
+}
+
+/* More Appointments Indicator */
+.more-appointments {
+    font-size: 0.65rem;
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-top: 2px;
+    text-align: center;
+}
+
+/* Enhanced Date Picker in Modal */
+.enhanced-date-picker {
+    background: var(--bg-light);
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.mini-calendar {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-top: 0.5rem;
+}
+
+.mini-calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.mini-calendar-day:hover:not(.disabled) {
+    background: var(--primary-color);
+    color: white;
+}
+
+.mini-calendar-day.selected {
+    background: var(--primary-color);
+    color: white;
+    font-weight: 700;
+}
+
+.mini-calendar-day.today {
+    border-color: var(--secondary-color);
+    font-weight: 600;
+}
+
+.mini-calendar-day.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Time Slot Selector */
+.time-slot-selector {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+    margin-top: 1rem;
+}
+
+.time-slot {
+    padding: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.9rem;
+}
+
+.time-slot:hover:not(.disabled) {
+    border-color: var(--primary-color);
+    background: rgba(74, 144, 226, 0.1);
+}
+
+.time-slot.selected {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.time-slot.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #f8f9fa;
+}
+
+/* Appointment Details Tooltip */
+.appointment-tooltip {
+    position: absolute;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 250px;
+    display: none;
+}
+
+.appointment-tooltip.show {
+    display: block;
+}
+
+.appointment-tooltip-header {
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.appointment-tooltip-body {
+    font-size: 0.85rem;
+    color: var(--text-dark);
+}
+
+.appointment-tooltip-body p {
+    margin: 0.25rem 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .calendar-day-cell {
+        min-height: 80px;
+        padding: 0.25rem;
+    }
+    
+    .day-number {
+        font-size: 0.8rem;
+    }
+    
+    .appointment-block {
+        font-size: 0.6rem;
+        padding: 2px 4px;
+    }
+    
+    .calendar-month-title {
+        font-size: 1.2rem;
+    }
+    
+    .time-slot-selector {
+        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    }
+}
+
+@media (max-width: 576px) {
+    .calendar-day-cell {
+        min-height: 60px;
+    }
+    
+    .appointment-block {
+        font-size: 0.55rem;
+        padding: 1px 3px;
+    }
+    
+    .calendar-month-grid {
+        gap: 4px;
+    }
+}
+
+/* Loading State */
+.calendar-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    color: var(--primary-color);
+}
+
+.calendar-loading i {
+    font-size: 2rem;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.calendar-empty-state {
+    text-align: center;
+    padding: 2rem;
+    color: #6c757d;
+}
+
+.calendar-empty-state i {
+    font-size: 3rem;
+    color: var(--secondary-color);
+    margin-bottom: 1rem;
+}
+
+/* Legend */
+.calendar-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+}
+
+.legend-color {
+    width: 20px;
+    height: 20px;
+    border-radius: 4px;
+}
