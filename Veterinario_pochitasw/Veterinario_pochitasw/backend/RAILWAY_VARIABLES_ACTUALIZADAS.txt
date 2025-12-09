@@ -1,0 +1,11 @@
+# VARIABLES DE ENTORNO PARA RAILWAY
+# Copia y pega estas variables EXACTAMENTE como están (SIN comillas)
+
+DATABASE_URL=postgresql://postgres:Eco235713.-@db.fnlncegdxgdybyxznxij.supabase.co:5432/postgres
+
+DJANGO_SECRET_KEY=2qW-Xa5EuShNsg-fuROQoLxfxlyOu0TVCkJQMEQ2DeUN5ieDQK2MNp1bYu8Ge1LrAyY
+
+DEBUG=False
+
+ALLOWED_HOSTS=veterinariopochitaswd-production.up.railway.app,*.railway.app
+
