@@ -5,6 +5,7 @@ psycopg2-binary
 markdown
 django-filter
 django-cors-headers
+django-ratelimit
 gunicorn
 dj-database-url
 whitenoise
