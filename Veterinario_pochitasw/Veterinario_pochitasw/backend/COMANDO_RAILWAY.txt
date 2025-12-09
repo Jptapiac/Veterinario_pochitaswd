@@ -1,0 +1,4 @@
+# Copia este comando completo en Railway → Settings → Deploy → Start command
+
+mkdir -p staticfiles && sleep 3 && python manage.py migrate --noinput || echo "Migration failed" && python manage.py collectstatic --noinput || echo "Collectstatic failed" && gunicorn pochita_project.wsgi --log-file - --timeout 120 --workers 2 --bind 0.0.0.0:${PORT:-8080}
+

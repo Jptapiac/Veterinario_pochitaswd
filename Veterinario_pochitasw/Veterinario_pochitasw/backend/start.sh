@@ -2,17 +2,16 @@
 # Script de inicio para Railway
 set -e
 
+echo "=== Starting deployment script ==="
 echo "Creating staticfiles directory if it doesn't exist..."
 mkdir -p staticfiles
 
 echo "Waiting for database connection..."
-# Esperar un poco para que la red esté lista
-sleep 2
+sleep 3
 
 echo "Running migrations..."
 python manage.py migrate --noinput || {
     echo "WARNING: Migrations failed, but continuing..."
-    echo "You may need to run migrations manually later"
 }
 
 echo "Collecting static files..."
