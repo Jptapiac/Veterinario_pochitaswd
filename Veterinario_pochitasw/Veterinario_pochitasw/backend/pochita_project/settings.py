@@ -24,7 +24,13 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 # ALLOWED_HOSTS: Restringido para seguridad
 # Para desarrollo local, permite localhost y 127.0.0.1
 # Para producción, configura la variable de entorno ALLOWED_HOSTS
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# ALLOWED_HOSTS: Configuración para Railway
+allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', '')
+if allowed_hosts_env:
+    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',')]
+else:
+    # Por defecto para desarrollo local
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 
@@ -134,7 +140,8 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [PROJECT_ROOT / 'frontend' / 'static']
-STATIC_ROOT = PROJECT_ROOT / 'frontend' / 'staticfiles'
+# En Railway, usar ruta dentro del directorio del backend
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # WhiteNoise para servir archivos estáticos en producción
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
