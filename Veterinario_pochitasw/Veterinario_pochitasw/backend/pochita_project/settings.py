@@ -206,13 +206,17 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # Configuración de cookies seguras (solo en producción con HTTPS)
+# Railway maneja SSL automáticamente, así que no necesitamos SECURE_SSL_REDIRECT
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+    # SECURE_SSL_REDIRECT = False  # Desactivado porque Railway maneja SSL
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000  # 1 año
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+    
+    # Confiar en los headers del proxy de Railway
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Session Security
 SESSION_COOKIE_HTTPONLY = True
