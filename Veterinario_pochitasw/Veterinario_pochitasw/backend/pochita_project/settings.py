@@ -49,6 +49,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Servir archivos estáticos
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # CORS
     'django.middleware.common.CommonMiddleware',
@@ -80,11 +81,14 @@ WSGI_APPLICATION = 'pochita_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
+import dj_database_url
+
+# Usar PostgreSQL si DATABASE_URL está disponible (producción), sino SQLite (desarrollo)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': PROJECT_ROOT / 'base_de_datos' / 'db.sqlite3',
-    }
+    'default': dj_database_url.config(
+        default=f'sqlite:///{PROJECT_ROOT / "base_de_datos" / "db.sqlite3"}',
+        conn_max_age=600
+    )
 }
 
 # Cache configuration (requerido para django-ratelimit)
@@ -131,6 +135,9 @@ USE_TZ = True
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [PROJECT_ROOT / 'frontend' / 'static']
 STATIC_ROOT = PROJECT_ROOT / 'frontend' / 'staticfiles'
+
+# WhiteNoise para servir archivos estáticos en producción
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # User Model
 AUTH_USER_MODEL = 'clinic.Usuario'

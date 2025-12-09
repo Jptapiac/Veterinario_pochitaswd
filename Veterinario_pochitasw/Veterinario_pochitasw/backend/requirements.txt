@@ -5,3 +5,6 @@ psycopg2-binary
 markdown
 django-filter
 django-cors-headers
+gunicorn
+dj-database-url
+whitenoise
