@@ -90,12 +90,28 @@ WSGI_APPLICATION = 'pochita_project.wsgi.application'
 import dj_database_url
 
 # Usar PostgreSQL si DATABASE_URL está disponible (producción), sino SQLite (desarrollo)
-DATABASES = {
-    'default': dj_database_url.config(
-        default=f'sqlite:///{PROJECT_ROOT / "base_de_datos" / "db.sqlite3"}',
-        conn_max_age=600
-    )
-}
+# Configuración para Supabase con pooler (recomendado para producción)
+database_url = os.environ.get('DATABASE_URL', '')
+if database_url:
+    # Si es Supabase, usar pooler si está disponible
+    if 'supabase.co' in database_url and 'pooler' not in database_url:
+        # Opcional: convertir a pooler URL (comentado por ahora)
+        pass
+    
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=database_url,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': PROJECT_ROOT / 'base_de_datos' / 'db.sqlite3',
+        }
+    }
 
 # Cache configuration (requerido para django-ratelimit)
 # Usando DummyCache para desarrollo (compatible con ratelimit)
@@ -139,7 +155,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [PROJECT_ROOT / 'frontend' / 'static']
+# STATICFILES_DIRS solo si el directorio existe
+static_dirs = PROJECT_ROOT / 'frontend' / 'static'
+STATICFILES_DIRS = [static_dirs] if static_dirs.exists() else []
 # En Railway, usar ruta dentro del directorio del backend
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
