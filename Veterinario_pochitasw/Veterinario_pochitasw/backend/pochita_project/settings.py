@@ -24,7 +24,13 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 # ALLOWED_HOSTS: Restringido para seguridad
 # Para desarrollo local, permite localhost y 127.0.0.1
 # Para producción, configura la variable de entorno ALLOWED_HOSTS
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+# ALLOWED_HOSTS: Configuración para Railway
+allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', '')
+if allowed_hosts_env:
+    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',')]
+else:
+    # Por defecto para desarrollo local
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 # Application definition
 
@@ -49,6 +55,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Servir archivos estáticos
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',  # CORS
     'django.middleware.common.CommonMiddleware',
@@ -80,12 +87,31 @@ WSGI_APPLICATION = 'pochita_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': PROJECT_ROOT / 'base_de_datos' / 'db.sqlite3',
+import dj_database_url
+
+# Usar PostgreSQL si DATABASE_URL está disponible (producción), sino SQLite (desarrollo)
+# Configuración para Supabase con pooler (recomendado para producción)
+database_url = os.environ.get('DATABASE_URL', '')
+if database_url:
+    # Si es Supabase, usar pooler si está disponible
+    if 'supabase.co' in database_url and 'pooler' not in database_url:
+        # Opcional: convertir a pooler URL (comentado por ahora)
+        pass
+    
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=database_url,
+            conn_max_age=600,
+            conn_health_checks=True,
+        )
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': PROJECT_ROOT / 'base_de_datos' / 'db.sqlite3',
+        }
+    }
 
 # Cache configuration (requerido para django-ratelimit)
 # Usando DummyCache para desarrollo (compatible con ratelimit)
@@ -129,8 +155,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
-STATICFILES_DIRS = [PROJECT_ROOT / 'frontend' / 'static']
-STATIC_ROOT = PROJECT_ROOT / 'frontend' / 'staticfiles'
+# STATICFILES_DIRS solo si el directorio existe
+static_dirs = PROJECT_ROOT / 'frontend' / 'static'
+STATICFILES_DIRS = [static_dirs] if static_dirs.exists() else []
+# En Railway, usar ruta dentro del directorio del backend
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# WhiteNoise para servir archivos estáticos en producción
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # User Model
 AUTH_USER_MODEL = 'clinic.Usuario'
@@ -174,13 +206,17 @@ SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # Configuración de cookies seguras (solo en producción con HTTPS)
+# Railway maneja SSL automáticamente, así que no necesitamos SECURE_SSL_REDIRECT
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+    # SECURE_SSL_REDIRECT = False  # Desactivado porque Railway maneja SSL
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_HSTS_SECONDS = 31536000  # 1 año
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
+    
+    # Confiar en los headers del proxy de Railway
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Session Security
 SESSION_COOKIE_HTTPONLY = True
